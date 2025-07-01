@@ -119,7 +119,7 @@ export default function BulkSBUpload() {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/sb/bulk_add', {
+      const res = await fetch('https://nijal-backend.onrender.com/api/sb/bulk_add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(validRows),

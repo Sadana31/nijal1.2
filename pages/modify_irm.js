@@ -16,7 +16,7 @@ export default function ModifyIRM() {
 
   useEffect(() => {
     if (id) {
-      fetch(`http://localhost:5000/api/irm/${id}`)
+      fetch(`https://nijal-backend.onrender.com/api/irm/${id}`)
         .then((res) => res.json())
         .then((data) => {
           const convertDate = (dateStr) => {
@@ -110,7 +110,7 @@ export default function ModifyIRM() {
       e.preventDefault();
       (async () => {
         try {
-          const response = await fetch(`http://localhost:5000/api/irm/update/${id}`, {
+          const response = await fetch(`https://nijal-backend.onrender.com/api/irm/update/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),

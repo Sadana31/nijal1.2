@@ -60,7 +60,7 @@ export default function AddIRM() {
       e.preventDefault();
       (async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/irm/add', {
+          const response = await fetch('https://nijal-backend.onrender.com/api/irm/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),

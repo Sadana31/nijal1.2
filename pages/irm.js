@@ -47,7 +47,7 @@ export default function IRMPage() {
   };
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/irm')
+    fetch('https://nijal-backend.onrender.com/api/irm')
       .then((res) => res.json())
       .then((result) => {
         const normalized = result.map(row => ({

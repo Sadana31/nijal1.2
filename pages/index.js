@@ -48,7 +48,7 @@
 
 
     useEffect(() => {
-      fetch('http://localhost:5000/api/sb')
+      fetch('https://nijal-backend.onrender.com/api/sb')
         .then((res) => res.json())
         .then((result) => {
           setData(result);

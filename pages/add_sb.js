@@ -155,7 +155,7 @@ export default function AddShippingBill() {
   });
   if (valid) {
     try {
-      const response = await fetch('http://localhost:5000/api/sb/add', {
+      const response = await fetch('https://nijal-backend.onrender.com/api/sb/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
