@@ -1,98 +1,61 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export default function AddIRM() {
-  const [formData, setFormData] = useState({});
-  const formRef = useRef(null);
   const router = useRouter();
+  const [formData, setFormData] = useState({});
 
   const decimalFields = ['remittanceAmount', 'utilizedAmount', 'outstandingAmount'];
-  const dateFields = ['remittanceDate'];
 
-  useEffect(() => {
-    const form = formRef.current;
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    let newValue = value;
 
-    function handleInput(e) {
-      const input = e.target;
-      const id = input.id;
-
-      if (input.maxLength > 0 && input.value.length > input.maxLength) {
-        input.value = input.value.slice(0, input.maxLength);
-      }
-
-      if (decimalFields.includes(id)) {
-        let val = input.value;
-        const selectionStart = input.selectionStart;
-
-        val = val.replace(/[^0-9.]/g, '');
-
-        const firstDecimal = val.indexOf('.');
-        if (firstDecimal !== -1) {
-          val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
-        }
-
-        const parts = val.split('.');
-        parts[0] = parts[0].slice(0, 18);
-        if (parts.length > 1) {
-          parts[1] = parts[1].slice(0, 2);
-          val = parts[0] + '.' + parts[1];
-        } else {
-          val = parts[0];
-        }
-
-        input.value = val;
-        input.setSelectionRange(selectionStart, selectionStart);
-      }
-
-      if (dateFields.includes(id)) {
-        const parts = input.value.split('-');
-        if (parts[0] && parts[0].length > 4) {
-          parts[0] = parts[0].slice(0, 4);
-          input.value = parts.join('-');
-        }
+    // Limit to digits and max 2 decimal places
+    if (decimalFields.includes(id)) {
+      newValue = newValue.replace(/[^0-9.]/g, '');
+      const parts = newValue.split('.');
+      parts[0] = parts[0].slice(0, 18);
+      if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2);
+        newValue = `${parts[0]}.${parts[1]}`;
+      } else {
+        newValue = parts[0];
       }
     }
 
-    function handleSubmit(e) {
-      e.preventDefault();
-      (async () => {
-        try {
-          const response = await fetch('https://nijal-backend.onrender.com/api/irm/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-          });
-
-          if (response.ok) {
-            toast.success('IRM entry saved!', { duration: 1500 });
-            setTimeout(() => router.push('/irm'), 2000);
-          } else {
-            const err = await response.json();
-            toast.error(err.message || 'Something went wrong');
-          }
-        } catch (error) {
-          toast.error('Network error while submitting.');
-          console.error(error);
-        }
-      })();
+    if (id === 'remittanceCurrency') {
+      newValue = newValue.slice(0, 3).toUpperCase(); // Limit currency to 3 chars
     }
 
-    const inputs = form.querySelectorAll('input');
-    inputs.forEach((input) => {
-      input.addEventListener('input', handleInput);
-    });
-    form.addEventListener('submit', handleSubmit);
+    setFormData((prev) => ({ ...prev, [id]: newValue }));
+  };
 
-    return () => {
-      inputs.forEach((input) => {
-        input.removeEventListener('input', handleInput);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch('https://nijal-backend.onrender.com/api/irm/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
-      form.removeEventListener('submit', handleSubmit);
-    };
-  }, [router, formData]);
+
+      if (!res.ok) {
+        const err = await res.json();
+        return toast.error(err.message || 'Something went wrong');
+      }
+
+      toast.success('IRM entry saved!');
+      setTimeout(() => router.push('/irm'), 1500);
+    } catch (err) {
+      console.error(err);
+      toast.error('Network error while submitting.');
+    }
+  };
 
   const mandatoryFields = [
     ['adCode', 'AD Code*'],
@@ -119,8 +82,7 @@ export default function AddIRM() {
 
   return (
     <form
-      ref={formRef}
-      id="addIrmForm"
+      onSubmit={handleSubmit}
       className="px-16 py-8 text-base text-[#1c2e3d]"
     >
       <h2 className="text-2xl font-bold mb-6 text-[#08315c]">Add IRM</h2>
@@ -136,8 +98,10 @@ export default function AddIRM() {
                 id={name}
                 name={name}
                 maxLength={name === 'remittanceCurrency' ? 3 : undefined}
-                value={formData[name] || ''}
-                onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
+                value={formData[name] || ''
+                  
+                }
+                onChange={handleInputChange}
                 className="w-full border border-gray-400 rounded px-3 py-2"
               />
             </div>
@@ -156,7 +120,7 @@ export default function AddIRM() {
                 id={name}
                 name={name}
                 value={formData[name] || ''}
-                onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full border border-gray-400 rounded px-3 py-2"
               />
             </div>
