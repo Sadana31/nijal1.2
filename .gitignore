@@ -10,6 +10,12 @@
 !.yarn/releases
 !.yarn/versions
 
+# === Backend folder ===
+/backend/node_modules/
+/backend/.env
+/backend/.next
+/backend/package-lock.json
+
 # testing
 /coverage
 
@@ -39,3 +45,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore CSVs or uploads
+*.csv
+
+# Ignore JSON data dumps
+*.json
+
+# Ignore raw file uploads or public storage
+/public/uploads
