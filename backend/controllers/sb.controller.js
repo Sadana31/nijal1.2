@@ -55,21 +55,18 @@ exports.createSBInBulk = async (req, res) => {
     'blNumber', 'vesselName', 'blDate', 'commercialInvoice'
   ];
 
-  const parseDate = (dateStr) => {
-    const [dd, mm, yyyy] = dateStr.split('-');
-    return new Date(`${yyyy}-${mm}-${dd}`);
-  };
-
   const validEntries = [];
 
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
+
+    // Check for missing fields
     const missing = requiredFields.filter(f => !row[f] || row[f].trim() === '');
     if (missing.length) {
       return res.status(400).json({ message: `Row ${i + 2}: Missing fields - ${missing.join(', ')}` });
     }
 
-    // Convert numeric fields
+    // Validate numeric fields
     const exportBillValue = parseFloat(row.exportBillValue);
     const billOutstandingValue = parseFloat(row.billOutstandingValue);
     const sbUtilization = parseFloat(row.sbUtilization);
@@ -78,26 +75,25 @@ exports.createSBInBulk = async (req, res) => {
       return res.status(400).json({ message: `Row ${i + 2}: Invalid numeric values` });
     }
 
-    // Convert date fields
-    const shippingBillDate = parseDate(row.shippingBillDate);
-    const invoiceDate = parseDate(row.invoiceDate);
-    const blDate = parseDate(row.blDate);
-
-    if ([shippingBillDate, invoiceDate, blDate].some(d => isNaN(d.getTime()))) {
-      return res.status(400).json({ message: `Row ${i + 2}: Invalid date format` });
+    // Validate date format: dd-mm-yyyy
+    const dateFields = ['shippingBillDate', 'invoiceDate', 'blDate'];
+    for (const field of dateFields) {
+      if (!/^\d{2}-\d{2}-\d{4}$/.test(row[field])) {
+        return res.status(400).json({ message: `Row ${i + 2}: Invalid date format in ${field} (use dd-mm-yyyy)` });
+      }
     }
 
     validEntries.push({
       shippingBillNo: row.shippingBillNo,
       formNo: row.formNo,
-      shippingBillDate,
+      shippingBillDate: row.shippingBillDate, // ✅ Store as string
       portCode: row.portCode,
       exportAgency: row.exportAgency,
       adCode: row.adCode,
       bankName: row.bankName,
       ieCode: row.ieCode,
       invoiceNo: row.invoiceNo,
-      invoiceDate,
+      invoiceDate: row.invoiceDate,           // ✅ Store as string
       fobCurrency: row.fobCurrency,
       exportBillValue,
       billOutstandingValue,
@@ -113,7 +109,7 @@ exports.createSBInBulk = async (req, res) => {
       shippingCompany: row.shippingCompany,
       blNumber: row.blNumber,
       vesselName: row.vesselName,
-      blDate,
+      blDate: row.blDate,                     // ✅ Store as string
       commercialInvoice: row.commercialInvoice,
     });
   }
@@ -125,5 +121,3 @@ exports.createSBInBulk = async (req, res) => {
     res.status(500).json({ message: 'Failed to insert entries', error: err.message });
   }
 };
-
-

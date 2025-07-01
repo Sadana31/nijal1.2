@@ -52,32 +52,30 @@ exports.createIRMInBulk = async (req, res) => {
     "remitterBank", "otherBankRef", "status", "remittanceType"
   ];
 
-  const parseDate = (dateStr) => {
-    const [dd, mm, yyyy] = dateStr.split('-');
-    return new Date(`${yyyy}-${mm}-${dd}`);
-  };
-
   const validEntries = [];
 
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
+
+    // Check for missing fields
     const missing = requiredFields.filter(f => !row[f] || row[f].trim() === '');
     if (missing.length) {
       return res.status(400).json({ message: `Row ${i + 2}: Missing fields - ${missing.join(', ')}` });
     }
 
-    const date = parseDate(row.remittanceDate);
-    if (isNaN(date.getTime())) {
-      return res.status(400).json({ message: `Row ${i + 2}: Invalid date format` });
+    // Validate date format
+    if (!/^\d{2}-\d{2}-\d{4}$/.test(row.remittanceDate)) {
+      return res.status(400).json({ message: `Row ${i + 2}: Invalid date format (use dd-mm-yyyy)` });
     }
 
+    // Push to valid entries
     validEntries.push({
       SrNo: i + 1,
       adCode: row.adCode,
       bankName: row.bankName,
       ieCode: row.ieCode,
       remittanceRefNo: row.remittanceRefNo,
-      remittanceDate: date,
+      remittanceDate: row.remittanceDate, // ✅ store as string
       purposeCode: row.purposeCode,
       remittanceCurrency: row.remittanceCurrency,
       remittanceAmount: parseFloat(row.remittanceAmount),
@@ -87,21 +85,18 @@ exports.createIRMInBulk = async (req, res) => {
       remitterAddress: row.remitterAddress,
       remitterCountryCode: row.remitterCountryCode,
       remitterBank: row.remitterBank,
-      otherBankRefNo: row.otherBankRef,  // ✅ fixed line
+      otherBankRefNo: row.otherBankRef,
       status: row.status,
       remittanceType: row.remittanceType
     });
-
   }
 
   try {
     const inserted = await IRM.insertMany(validEntries);
-    console.log('Inserted:', inserted);  // ✅ Debug log
+    console.log('Inserted:', inserted.length);
     res.status(201).json({ message: `${inserted.length} IRM entries inserted successfully` });
   } catch (err) {
-    console.error('Insertion failed:', err);  // ✅ Error log
+    console.error('Insertion failed:', err);
     res.status(500).json({ message: 'Failed to insert entries', error: err.message });
   }
-
 };
-
