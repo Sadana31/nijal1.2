@@ -2,10 +2,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
-
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -25,6 +25,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Routes
 app.use('/api/irm', require('./routes/irm.routes'));
 app.use('/api/sb', require('./routes/sb.routes'));
+app.use('/api/mapping', require('./routes/mapping.routes'));
 
 // Start Server
 app.listen(port, () => {
@@ -32,3 +33,4 @@ app.listen(port, () => {
 });
 
 
+ 

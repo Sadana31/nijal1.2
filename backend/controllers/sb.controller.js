@@ -3,12 +3,29 @@ const ShippingBill = require('../models/sb.model');
 
 exports.getAllSB = async (req, res) => {
   try {
+    const { _id, shippingBillNo } = req.query;
+
+    if (_id) {
+      const sb = await ShippingBill.findById(_id);
+      if (!sb) return res.status(404).json({ message: "Shipping Bill not found" });
+      return res.json([sb]); // return as array for consistency
+    }
+
+    if (shippingBillNo) {
+      const sb = await ShippingBill.find({ shippingBillNo });
+      if (!sb.length) return res.status(404).json({ message: "Shipping Bill not found" });
+      return res.json(sb); // already an array
+    }
+
+
+    // If no _id, return all
     const sbRecords = await ShippingBill.find();
-    res.json(sbRecords);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+      res.json(sbRecords); // array
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
 };
+
 
 exports.createSB = async (req, res) => {
   try {

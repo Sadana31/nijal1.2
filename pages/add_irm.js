@@ -1,51 +1,170 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export default function AddIRM() {
   const router = useRouter();
   const [formData, setFormData] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef(null);
 
   const decimalFields = ['remittanceAmount', 'utilizedAmount', 'outstandingAmount'];
+  const countryCodeFields = ['remitterCountryCode'];
 
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    let newValue = value;
+  const showError = (input, message) => {
+    let error = input.nextElementSibling;
+    if (!error || !error.classList.contains('error-message')) {
+      error = document.createElement('div');
+      error.className = 'error-message';
+      error.style.color = 'red';
+      error.style.fontSize = '0.9em';
+      input.after(error);
+    }
+    error.textContent = message;
+  };
 
-    // Limit to digits and max 2 decimal places
-    if (decimalFields.includes(id)) {
-      newValue = newValue.replace(/[^0-9.]/g, '');
-      const parts = newValue.split('.');
-      parts[0] = parts[0].slice(0, 18);
-      if (parts.length > 1) {
-        parts[1] = parts[1].slice(0, 2);
-        newValue = `${parts[0]}.${parts[1]}`;
-      } else {
-        newValue = parts[0];
+  const clearError = (input) => {
+    const error = input.nextElementSibling;
+    if (error && error.classList.contains('error-message')) {
+      error.textContent = '';
+    }
+  };
+
+  const validateField = (input) => {
+    clearError(input);
+    const val = input.value.trim();
+    const id = input.id;
+
+    if (input.hasAttribute('required') && val === '') {
+      showError(input, 'This field is required');
+      return false;
+    }
+
+    if (input.maxLength > 0 && val.length > input.maxLength) {
+      showError(input, `Maximum length is ${input.maxLength}`);
+      return false;
+    }
+
+    if (id === 'remittanceCurrency' || countryCodeFields.includes(id)) {
+      if (!/^[A-Z]{3}$/.test(val)) {
+        showError(input, 'Enter exactly 3 uppercase letters');
+        return false;
+      }
+    } else {
+      if (!/^[a-zA-Z0-9.\- ]*$/.test(val)) {
+        showError(input, 'Only letters, numbers, hyphens (-), and dots (.) allowed');
+        return false;
       }
     }
 
-    if (id === 'remittanceCurrency') {
-      newValue = newValue.slice(0, 3).toUpperCase(); // Limit currency to 3 chars
+    if (decimalFields.includes(id)) {
+      if (!/^\d{1,18}(\.\d{1,2})?$/.test(val)) {
+        showError(input, 'Enter a valid decimal (18 digits max, 2 decimals)');
+        return false;
+      }
     }
 
-    setFormData((prev) => ({ ...prev, [id]: newValue }));
+    return true;
   };
+
+  const handleInput = (e) => {
+    const input = e.target;
+    const id = input.id;
+
+    if (id === 'remittanceCurrency' || countryCodeFields.includes(id)) {
+      input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+      return;
+    }
+
+    if (input.maxLength > 0 && input.value.length > input.maxLength) {
+      input.value = input.value.slice(0, input.maxLength);
+    }
+
+    if (decimalFields.includes(id)) {
+      let val = input.value;
+      const selectionStart = input.selectionStart;
+
+      val = val.replace(/[^0-9.]/g, '');
+      const firstDecimal = val.indexOf('.');
+      if (firstDecimal !== -1) {
+        val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
+      }
+
+      const parts = val.split('.');
+      parts[0] = parts[0].slice(0, 18);
+      if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2);
+        val = parts[0] + '.' + parts[1];
+      } else {
+        val = parts[0];
+      }
+
+      input.value = val;
+      input.setSelectionRange(selectionStart, selectionStart);
+      return;
+    }
+
+    input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '');
+  };
+
+  useEffect(() => {
+    const form = formRef.current;
+    const inputs = form.querySelectorAll('input');
+
+    const disableEnterKey = (e) => {
+      if (e.key === 'Enter') e.preventDefault();
+    };
+
+    inputs.forEach((input) => {
+      input.addEventListener('input', handleInput);
+      input.addEventListener('blur', () => validateField(input));
+      input.addEventListener('keydown', disableEnterKey);
+    });
+
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener('input', handleInput);
+        input.removeEventListener('blur', () => validateField(input));
+        input.removeEventListener('keydown', disableEnterKey);
+      });
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    const form = formRef.current;
+    const inputs = form.querySelectorAll('input');
+    let valid = true;
+    inputs.forEach((input) => {
+      if (!validateField(input)) valid = false;
+    });
+
+    if (!valid) {
+      toast.error('Please fix errors before submitting.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const formDataObj = {};
+    inputs.forEach((input) => {
+      formDataObj[input.name] = input.value.trim();
+    });
 
     try {
       const res = await fetch('https://nijal-backend.onrender.com/api/irm/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formDataObj),
       });
 
       if (!res.ok) {
         const err = await res.json();
+        setIsSubmitting(false);
         return toast.error(err.message || 'Something went wrong');
       }
 
@@ -54,6 +173,7 @@ export default function AddIRM() {
     } catch (err) {
       console.error(err);
       toast.error('Network error while submitting.');
+      setIsSubmitting(false);
     }
   };
 
@@ -82,8 +202,10 @@ export default function AddIRM() {
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="px-16 py-8 text-base text-[#1c2e3d]"
+      autoComplete="off"
     >
       <h2 className="text-2xl font-bold mb-6 text-[#08315c]">Add IRM</h2>
 
@@ -97,11 +219,8 @@ export default function AddIRM() {
                 type={name === 'remittanceDate' ? 'date' : 'text'}
                 id={name}
                 name={name}
-                maxLength={name === 'remittanceCurrency' ? 3 : undefined}
-                value={formData[name] || ''
-                  
-                }
-                onChange={handleInputChange}
+                required
+                maxLength={name === 'remittanceCurrency' ? 3 : 50}
                 className="w-full border border-gray-400 rounded px-3 py-2"
               />
             </div>
@@ -119,8 +238,7 @@ export default function AddIRM() {
                 type="text"
                 id={name}
                 name={name}
-                value={formData[name] || ''}
-                onChange={handleInputChange}
+                maxLength={50}
                 className="w-full border border-gray-400 rounded px-3 py-2"
               />
             </div>
@@ -130,9 +248,12 @@ export default function AddIRM() {
 
       <button
         type="submit"
-        className="bg-[#08315c] text-white font-semibold px-8 py-3 rounded hover:bg-[#061f38] text-lg"
+        disabled={isSubmitting}
+        className={`bg-[#08315c] text-white font-semibold px-8 py-3 rounded text-lg ${
+          isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
+        }`}
       >
-        Submit
+        {isSubmitting ? 'Submitting...' : 'Submit'}
       </button>
     </form>
   );

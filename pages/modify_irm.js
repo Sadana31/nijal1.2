@@ -12,7 +12,7 @@ export default function ModifyIRM() {
   const id = searchParams.get('id');
 
   const decimalFields = ['remittanceAmount', 'utilizedAmount', 'outstandingAmount'];
-  const dateFields = ['remittanceDate'];
+  const countryCodeFields = ['remitterCountryCode'];
 
   useEffect(() => {
     if (id) {
@@ -53,10 +53,9 @@ export default function ModifyIRM() {
             otherBankRef: data.otherBankRef || data.OtherBankRefNumber || '',
             status: data.status || data.Status || '',
             remittanceType: data.remittanceType || data.RemittanceType || '',
-            };
+          };
 
-            setFormData(normalized);
-
+          setFormData(normalized);
         })
         .catch(() => toast.error('Failed to load IRM data'));
     }
@@ -95,15 +94,24 @@ export default function ModifyIRM() {
 
         input.value = val;
         input.setSelectionRange(selectionStart, selectionStart);
+        setFormData((prev) => ({ ...prev, [id]: val }));
+        return;
       }
 
-      if (dateFields.includes(id)) {
-        const parts = input.value.split('-');
-        if (parts[0] && parts[0].length > 4) {
-          parts[0] = parts[0].slice(0, 4);
-          input.value = parts.join('-');
-        }
+      if (countryCodeFields.includes(id) || id === 'remittanceCurrency') {
+        input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+        setFormData((prev) => ({ ...prev, [id]: input.value }));
+        return;
       }
+
+      if (id === 'ieCode') {
+        input.value = input.value.replace(/\D/g, '').slice(0, 10);
+        setFormData((prev) => ({ ...prev, [id]: input.value }));
+        return;
+      }
+
+      input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
+      setFormData((prev) => ({ ...prev, [id]: input.value }));
     }
 
     function handleSubmit(e) {
@@ -182,7 +190,7 @@ export default function ModifyIRM() {
                 id={name}
                 name={name}
                 required
-                maxLength={name === 'remittanceCurrency' ? 3 : undefined}
+                maxLength={name === 'remittanceCurrency' ? 3 : 50}
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className={`w-full border border-gray-400 rounded px-3 py-2 ${formData[name] ? 'bg-gray-100' : ''}`}
@@ -202,6 +210,7 @@ export default function ModifyIRM() {
                 type="text"
                 id={name}
                 name={name}
+                maxLength={50}
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className={`w-full border border-gray-400 rounded px-3 py-2 ${formData[name] ? 'bg-gray-100' : ''}`}

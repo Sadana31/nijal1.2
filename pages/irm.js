@@ -14,6 +14,8 @@ export default function IRMPage() {
   const [selectedIRMs, setSelectedIRMs] = useState(new Set());
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState(null);
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   const router = useRouter();
 
@@ -44,7 +46,40 @@ export default function IRMPage() {
       else if (text == 'Bulk IRM Upload'){
           router.push('/bulk_irm');
       }
+      else if (text === "Proceed to SB Mapping") {
+                if (selectedIRMs.size !== 1) {
+                  toast.error("Please select exactly one IRM to map.");
+                  return;
+                }
+      
+                const selectedIRMNo = [...selectedIRMs][0];
+                const selectedRow = data.find((row) => row.RemittanceRefNumber === selectedIRMNo);
+      
+                if (!selectedRow) {
+                  toast.error("Selected IRM not found.");
+                  return;
+                }
+      
+                // ✅ Store in sessionStorage
+                sessionStorage.setItem("selectedRow", JSON.stringify(selectedRow));
+      
+                // ✅ Navigate
+                router.push({
+                  pathname: '/mapping',
+                  query: { mode: 'irmToSb' }
+                });
+              }
   };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
 
   useEffect(() => {
     fetch('https://nijal-backend.onrender.com/api/irm')
@@ -91,6 +126,33 @@ export default function IRMPage() {
     setFilteredData(filtered);
   };
 
+  const sanitizeSearchInput = (field, value) => {
+  let val = value;
+
+  switch (field) {
+    case 'AD Code':
+      val = val.replace(/\D/g, '').slice(0, 10);
+      break;
+   case 'IE Code':
+    // Only digits, max 10 digits
+    val = val.replace(/\D/g, '').slice(0, 10);
+    break;
+
+
+    case 'Remittance Ref No':
+    case 'Bank Name':
+      // Letters, numbers, hyphen, dot, space, max 50 chars
+      val = val.replace(/[^a-zA-Z.\- ]/g, '').slice(0, 20);
+      break;
+
+    default:
+      val = val;
+  }
+
+  return val;
+};
+
+
   const exportToCSV = () => {
     if (!filteredData.length) return toast.error('No data to export');
 
@@ -126,15 +188,37 @@ export default function IRMPage() {
     setModalVisible(true);
   };
 
-  const visibleRows = filteredData.slice(0, entriesToShow);
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (!sortField) return 0;
+    const valA = a[sortField] || '';
+    const valB = b[sortField] || '';
+    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+const visibleRows = sortedData.slice(0, entriesToShow);
+
 
   const searchOptions = ['Remittance Ref No', 'Bank Name', 'AD Code', 'IE Code'];
   const placeholders = {
     'Remittance Ref No': 'e.g. 0002GRS12345678',
-    'Bank Name': 'e.g. SBI',
+    'Bank Name': 'e.g. IRMI',
     'AD Code': 'e.g. 6390005',
     'IE Code': 'e.g. 1234567890'
   };
+
+  const sortableHeaders = [
+    { label: 'Remittance Ref No', key: 'RemittanceRefNumber' },
+    { label: 'Bank Name', key: 'BankName' },
+    { label: 'IE Code', key: 'IECode' },
+    { label: 'Remittance Date', key: 'RemittanceDate' },
+    { label: 'Remittance Amount', key: 'RemittanceAmount' },
+    { label: 'Outstanding Amount', key: 'OutstandingAmount' },
+    { label: 'Remitter Name', key: 'RemitterName' },
+    { label: 'Status', key: 'Status' }
+  ];
+
 
   return (
     <div className="px-12 py-10 font-sans">
@@ -154,9 +238,10 @@ export default function IRMPage() {
             type="text"
             placeholder={placeholders[searchField]}
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="border border-gray-300 rounded-md px-4 py-2 text-black w-64"
+            onChange={(e) => setSearchValue(sanitizeSearchInput(searchField, e.target.value))}
+            className="border border-gray-300 rounded-md px-4 py-2 w-64 shadow-sm placeholder-gray-500 text-gray-800"
           />
+
         </div>
         <div className="flex items-center gap-4">
           {['Add IRM Entry', 'Bulk IRM Upload', 'Export File'].map((text, i) => (
@@ -187,10 +272,19 @@ export default function IRMPage() {
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[#7bbbc2] font-semibold">
-              <th className="px-2 py-3 w-4"><input type="checkbox" /></th>
+              <th className="px-2 py-3 w-4"></th>
               <th className="px-2 py-3 w-4 text-black"></th>
-              {["RemittanceRefNumber", "BankName", "IECode", "RemittanceDate", "RemittanceAmount", "OutstandingAmount", "RemitterName", "Status"].map((head, i) => (
-                <th key={i} className="px-4 py-3 text-left text-black">{head}</th>
+              {sortableHeaders.map(({ label, key }) => (
+                <th
+                  key={key}
+                  onClick={() => handleSort(key)}
+                  className="px-4 py-3 text-left text-black cursor-pointer select-none"
+                >
+                  {label}
+                  <span className="inline-block w-4 ml-1">
+                    {sortField === key ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '↕'}
+                  </span>
+                </th>
               ))}
             </tr>
           </thead>
@@ -200,7 +294,7 @@ export default function IRMPage() {
                 <tr key={row._id} className="border-b">
                   <td className="px-2 py-2">
                     <input
-                      type="checkbox"
+                      type="radio"
                       checked={selectedIRMs.has(row.RemittanceRefNumber)}
                       onChange={(e) => {
                         const newSet = new Set(selectedIRMs);

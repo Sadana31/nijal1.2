@@ -16,6 +16,9 @@
     const [modalVisible, setModalVisible] = useState(false);
     const [modalData, setModalData] = useState(null);
 
+    const [sortField, setSortField] = useState('shippingBillNo'); // Default sort field
+    const [sortDirection, setSortDirection] = useState('asc');     // Default sort direction
+
     const router = useRouter();
 
       const handleClick = (text) => {
@@ -43,6 +46,29 @@
         }
         else if (text == 'Bulk Shipping Bill Upload'){
           router.push('/bulk_sb');
+        }
+        else if (text === "Proceed to IRM Mapping") {
+          if (selectedSBs.size !== 1) {
+            toast.error("Please select exactly one Shipping Bill to map.");
+            return;
+          }
+
+          const selectedSBNo = [...selectedSBs][0];
+          const selectedRow = data.find((row) => row.shippingBillNo === selectedSBNo);
+
+          if (!selectedRow) {
+            toast.error("Selected Shipping Bill not found.");
+            return;
+          }
+
+          // ✅ Store in sessionStorage
+          sessionStorage.setItem("selectedRow", JSON.stringify(selectedRow));
+
+          // ✅ Navigate
+          router.push({
+            pathname: '/mapping',
+            query: { mode: 'sbToIrm' }
+          });
         }
       };
 
@@ -130,8 +156,74 @@
       URL.revokeObjectURL(url);
     };
 
+    const sanitizeAndValidate = (field, value) => {
+  let sanitized = value;
 
-    const visibleRows = filteredData.slice(0, entriesToShow);
+  switch (field) {
+    case 'Shipping Bill':
+      // Only digits, max 10 chars
+      sanitized = sanitized.replace(/\D/g, '').slice(0, 10);
+      break;
+
+    case 'Form No':
+      // Letters, numbers, hyphen, dot, space, max 50 chars
+      sanitized = sanitized.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
+      break;
+
+    case 'Port Code':
+      // Exactly 3 uppercase letters
+      sanitized = sanitized.toUpperCase().replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 20);
+      break;
+
+    case 'Bank Name':
+      // Letters, numbers, hyphen, dot, space, max 50 chars
+      sanitized = sanitized.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
+      break;
+
+    default:
+      // Default general sanitization
+      sanitized = sanitized.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
+  }
+
+  return sanitized;
+};
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+
+
+  const sortableHeaders = [
+    { label: 'Shipping Bill', key: 'shippingBillNo' },
+    { label: 'Form No', key: 'formNo' },
+    { label: 'Shipping Bill Date', key: 'shippingBillDate' },
+    { label: 'Port Code', key: 'portCode' },
+    { label: 'Bank Name', key: 'bankName' },
+    { label: 'Invoice Count', key: 'invoiceCount' },
+    { label: 'FOB Currency', key: 'fobCurrency' },
+    { label: 'Export Bill Value', key: 'exportBillValue' },
+    { label: 'Bill Outstanding Value', key: 'billOutstandingValue' },
+    { label: 'Buyer Name', key: 'buyerName' },
+    { label: 'Buyer Country Code', key: 'buyerCountryCode' },
+  ];
+
+
+   const sortedData = [...filteredData].sort((a, b) => {
+  if (!sortField) return 0;
+  const valA = a[sortField] || '';
+  const valB = b[sortField] || '';
+  if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+  if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+  return 0;
+});
+const visibleRows = sortedData.slice(0, entriesToShow);
+
 
     return (
       <div className="px-15 py-10 bg-white min-h-screen font-sans">
@@ -155,7 +247,14 @@
               type="text"
               placeholder={placeholders[searchField]}
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                const sanitizedVal = sanitizeAndValidate(searchField, val);
+                setSearchValue(sanitizedVal);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               className="border border-gray-300 rounded-md px-4 py-2 w-64 shadow-sm placeholder-gray-500 text-gray-800"
             />
           </div>
@@ -192,22 +291,30 @@
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#7bbbc2] text-black font-semibold">
-                <th className="px-3 py-3 w-4"><input
-  type="checkbox"/></th>
-                <th className="px-3 py-3 w-4"></th>
-                {["Shipping Bill", "Form No", "Shipping Bill Date", "Port Code", "Bank Name", "Invoice Count", "FOB Currency", "Export Bill Value", "Bill Outstanding Value", "Buyer Name", "Buyer Country Code"].map((header, idx) => (
-                  <th key={idx} className="px-4 py-3 text-left">{header}</th>
-                ))}
-              </tr>
-            </thead>
+             <thead>
+                <tr className="bg-[#7bbbc2] text-black font-semibold">
+                  <th className="px-3 py-3 w-4"></th>
+                  <th className="px-3 py-3 w-4"></th>
+                  {sortableHeaders.map(({ label, key }) => (
+                    <th
+                      key={key}
+                      onClick={() => handleSort(key)}
+                      className="px-4 py-3 text-left cursor-pointer select-none"
+                    >
+                      {label}
+                      <span className="inline-block fixed w-4 text-center">
+                        {sortField === key ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '↕'}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
             <tbody className="text-gray-800">
               {visibleRows.map((row) => (
                 <>
                   <tr key={row._id} className="border-b">
                     <td className="px-3 py-2"><input
-  type="checkbox"
+  type="radio"
   checked={selectedSBs.has(row.shippingBillNo)}
   onChange={(e) => {
     const newSet = new Set(selectedSBs);
