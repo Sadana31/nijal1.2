@@ -315,11 +315,14 @@ const handleSubmitMappingIRMToSB = async () => {
     
     {sbData.length > 0 && (
       <div className="p-4 border border-gray-300 rounded-xl shadow-sm overflow-hidden bg-white">
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">Mapped Shipping Bills</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">Select Shipping Bills to map</h2>
         <table className="w-full text-sm text-left">
           <thead className="bg-[#6cbcbf] text-white">
             <tr>
-              <th className="px-3 py-2 w-[30px]"><input type="checkbox" /></th>
+              <th className="px-3 py-2 w-[30px]">
+                <input type="checkbox" />
+              </th>
+              <th className="px-3 py-2 w-[30px]"></th> {/* ← expander column */}
               <th className="px-3 py-2">Shipping Bill</th>
               <th className="px-3 py-2">Form No</th>
               <th className="px-3 py-2">Shipping Bill Date</th>
@@ -333,44 +336,94 @@ const handleSubmitMappingIRMToSB = async () => {
           </thead>
           <tbody>
             {sbData.map((sb, i) => (
-              <tr key={i} className="border-b">
-                <td className="px-3 py-2 text-black">
-                  <input
-                    type="checkbox"
-                    checked={selectedSBs.has(sb.shippingBillNo)}
-                    onChange={(e) => {
-                      const newSet = new Set(selectedSBs);
-                      if (e.target.checked) newSet.add(sb.shippingBillNo);
-                      else newSet.delete(sb.shippingBillNo);
-                      setSelectedSBs(newSet);
-                    }}
-                  />
-                </td>
-                <td className="px-3 py-2 text-black">{sb.shippingBillNo}</td>
-                <td className="px-3 py-2 text-black">{sb.formNo}</td>
-                <td className="px-3 py-2 text-black">{sb.shippingBillDate}</td>
-                <td className="px-3 py-2 text-black">{sb.portCode}</td>
-                <td className="px-3 py-2 text-black">{sb.bankName}</td>
-                <td className="px-3 py-2 text-black">{sb.invoiceCount}</td>
-                <td className="px-3 py-2 text-black">{sb.fobCurrency}</td>
-                <td className="px-3 py-2 text-black">{sb.exportBillValue}</td>
-                <td className="px-3 py-2 text-black">
-                  <input
-                    type="number"
-                    className="border border-gray-300 rounded px-2 py-1 w-24 text-black"
-                    value={utilization[sb.shippingBillNo] || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setUtilization({
-                        ...utilization,
-                        [sb.shippingBillNo]: value === '' ? '' : parseFloat(value),
-                      });
-                    }}
+  <React.Fragment key={i}>
+    <tr className="border-b">
+      <td className="px-3 py-2 text-black">
+        <input
+          type="checkbox"
+          checked={selectedSBs.has(sb.shippingBillNo)}
+          onChange={(e) => {
+            const newSet = new Set(selectedSBs);
+            if (e.target.checked) newSet.add(sb.shippingBillNo);
+            else newSet.delete(sb.shippingBillNo);
+            setSelectedSBs(newSet);
+          }}
+        />
+      </td>
+      <td className="px-3 py-2 text-black">
+        <button
+          onClick={() => toggleSBRow(sb.shippingBillNo)}
+          className="font-bold text-black"
+        >
+          {expandedSBRows.includes(sb.shippingBillNo) ? '−' : '+'}
+        </button>
+      </td>
+      <td className="px-3 py-2 text-black">{sb.shippingBillNo}</td>
 
-                  />
-                </td>
+      <td className="px-3 py-2 text-black">{sb.formNo}</td>
+      <td className="px-3 py-2 text-black">{sb.shippingBillDate}</td>
+      <td className="px-3 py-2 text-black">{sb.portCode}</td>
+      <td className="px-3 py-2 text-black">{sb.bankName}</td>
+      <td className="px-3 py-2 text-black">{sb.invoiceCount}</td>
+      <td className="px-3 py-2 text-black">{sb.fobCurrency}</td>
+      <td className="px-3 py-2 text-black">{sb.exportBillValue}</td>
+      <td className="px-3 py-2 text-black">
+        <input
+          type="number"
+          className="border border-gray-300 rounded px-2 py-1 w-24 text-black"
+          value={utilization[sb.shippingBillNo] || ''}
+          onChange={(e) => {
+            const value = e.target.value;
+            setUtilization({
+              ...utilization,
+              [sb.shippingBillNo]: value === '' ? '' : parseFloat(value),
+            });
+          }}
+        />
+      </td>
+    </tr>
+
+    {/* Expanded row content */}
+    {expandedSBRows.includes(sb.shippingBillNo) && (
+      <tr className="bg-gray-50 text-sm">
+        <td colSpan={11}>
+          <table className="w-full border-collapse text-left">
+            <thead className="bg-gray-100 font-semibold text-black">
+              <tr>
+                {["","IECode", "InvoiceDate", "RealizedValue", "BuyerAddress", "ConsigneeCountryCode"].map((key, i) => (
+                  <th key={i} className="px-4 py-2">{key}</th>
+                ))}
               </tr>
-            ))}
+            </thead>
+            <tbody>
+              <tr>
+                {["","ieCode", "invoiceDate", "realizedValue", "buyerAddress", "consigneeCountryCode"].map((key, i) => (
+                  <td key={i} className="px-4 py-2 text-black">{sb[key] || '-'}</td>
+                ))}
+              </tr>
+            </tbody>
+
+            <thead className="bg-gray-100 font-semibold text-black">
+              <tr>
+                {["","PortOfDestination", "ShippingCompany", "VesselName", "BLDate", "TradeTerms", "Commodity"].map((key, i) => (
+                  <th key={i} className="px-4 py-2">{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {["","portOfDestination", "shippingCompany", "vesselName", "blDate", "tradeTerms", "commodity"].map((key, i) => (
+                  <td key={i} className="px-4 py-2 text-black">{sb[key] || '-'}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    )}
+  </React.Fragment>
+))}
+
           </tbody>
         </table>
       </div>

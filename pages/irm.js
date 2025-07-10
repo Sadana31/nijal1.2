@@ -11,7 +11,7 @@ export default function IRMPage() {
   const [searchValue, setSearchValue] = useState('');
   const [expandedRows, setExpandedRows] = useState([]);
   const [entriesToShow, setEntriesToShow] = useState(10);
-  const [selectedIRMs, setSelectedIRMs] = useState(new Set());
+  const [selectedIRMs, setSelectedIRMs] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [sortField, setSortField] = useState('');

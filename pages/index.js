@@ -13,7 +13,7 @@
     const [searchValue, setSearchValue] = useState('');
     const [expandedRows, setExpandedRows] = useState([]);
     const [entriesToShow, setEntriesToShow] = useState(10);
-    const [selectedSBs, setSelectedSBs] = useState(new Set());
+    const [selectedSB, setSelectedSB] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalData, setModalData] = useState(null);
 
@@ -33,47 +33,32 @@
         } else if (text === 'Details') {
           showSelectedDetails();
         } else if (text === 'Modify SB') {
-          if (selectedSBs.size !== 1) {
+          if (!selectedSB) {
             toast.error("Please select exactly one Shipping Bill to modify.");
             return;
           }
 
-          const selectedSBNo = [...selectedSBs][0];
-          const selectedRow = data.find((row) => row.shippingBillNo === selectedSBNo);
-
-          if (!selectedRow) {
-            toast.error("Selected Shipping Bill not found.");
-            return;
-          }
-
-          router.push(`/modify_sb?id=${selectedRow._id}`);
+          const selectedSBNo = selectedSB;    
+          router.push(`/modify_sb?id=${selectedSBNo._id}`);
         }
         else if (text == 'Bulk Shipping Bill Upload'){
           router.push('/bulk_sb');
         }
         else if (text === "Proceed to IRM Mapping") {
-          if (selectedSBs.size !== 1) {
+          if (!selectedSB) {
             toast.error("Please select exactly one Shipping Bill to map.");
             return;
           }
 
-          const selectedSBNo = [...selectedSBs][0];
-          const selectedRow = data.find((row) => row.shippingBillNo === selectedSBNo);
+          // store the object, not a primitive
+          sessionStorage.setItem("selectedRow", JSON.stringify(selectedSB));
 
-          if (!selectedRow) {
-            toast.error("Selected Shipping Bill not found.");
-            return;
-          }
-
-          // ✅ Store in sessionStorage
-          sessionStorage.setItem("selectedRow", JSON.stringify(selectedRow));
-
-          // ✅ Navigate
           router.push({
             pathname: '/mapping',
             query: { mode: 'sbToIrm' }
           });
         }
+
       };
 
       const handleSearch = useCallback(() => {
@@ -123,12 +108,12 @@
     };
 
     const showSelectedDetails = () => {
-      if (selectedSBs.size !== 1) {
+      if (!selectedSB) {
         alert("Please select exactly one Shipping Bill to view details.");
         return;
       }
 
-      const selectedSBNo = [...selectedSBs][0];
+      const selectedSBNo = [...selectedSB];
       const details = data.find((row) => row.shippingBillNo === selectedSBNo);
       setModalData(details);
       setModalVisible(true);
@@ -329,18 +314,12 @@
                 <>
                   <tr key={row._id} className="border-b">
                     <td className="px-3 py-2"><input
-  type="radio"
-  checked={selectedSBs.has(row.shippingBillNo)}
-  onChange={(e) => {
-    const newSet = new Set(selectedSBs);
-    if (e.target.checked) {
-      newSet.add(row.shippingBillNo);
-    } else {
-      newSet.delete(row.shippingBillNo);
-    }
-    setSelectedSBs(newSet);
-  }}
-/></td>
+                      type="radio"
+                      name="sbSelection"
+                      checked={selectedSB?._id === row._id}
+                      onChange={() => setSelectedSB(row)}
+                      />
+                    </td>
                     <td className="px-3 py-2">
                       <button onClick={() => toggleRow(row._id)} className="font-bold text-lg">
                         {expandedRows.includes(row._id) ? '−' : '+'}
@@ -410,7 +389,7 @@
           </table>
         </div>
 
-        
+
 <div className="flex justify-end mt-6 pr-4 text-xs">
   <div className="flex items-center gap-1">
     <button
