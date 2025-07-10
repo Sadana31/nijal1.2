@@ -19,6 +19,11 @@ export default function IRMPage() {
 
   const router = useRouter();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const startIndex = (currentPage - 1) * entriesToShow;
+  const endIndex = startIndex + entriesToShow;
+  const totalPages = Math.ceil(filteredData.length / entriesToShow);
+
   const handleClick = (text) => {
     if (text === 'Add IRM Entry') {
       router.push('/add_irm');
@@ -123,7 +128,7 @@ export default function IRMPage() {
     );
     setFilteredData(filtered);
   }, [data, searchField, searchValue]);
-  
+
   useEffect(() => {
     handleSearch();
   }, [handleSearch]);
@@ -202,7 +207,7 @@ export default function IRMPage() {
     return 0;
   });
 
-const visibleRows = sortedData.slice(0, entriesToShow);
+  const visibleRows = sortedData.slice(startIndex, endIndex);
 
 
   const searchOptions = ['Remittance Ref No', 'Bank Name', 'AD Code', 'IE Code'];
@@ -366,6 +371,57 @@ const visibleRows = sortedData.slice(0, entriesToShow);
           </tbody>
         </table>
       </div>
+      
+<div className="flex justify-end mt-6 pr-4 text-xs">
+  <div className="flex items-center gap-1">
+    <button
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className="px-2 py-[2px] border rounded border-gray-400 text-gray-600 disabled:opacity-40"
+    >
+      Prev
+    </button>
+
+    {(() => {
+      const pages = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        if (currentPage > 4) pages.push('...');
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        for (let i = start; i <= end; i++) pages.push(i);
+        if (currentPage < totalPages - 3) pages.push('...');
+        pages.push(totalPages);
+      }
+
+      return pages.map((p, i) => (
+        <button
+          key={i}
+          onClick={() => typeof p === 'number' && setCurrentPage(p)}
+          disabled={p === '...'}
+          className={`px-2 py-[2px] border rounded ${
+            p === currentPage
+              ? 'border-black font-semibold text-black'
+              : 'border-gray-400 text-gray-800'
+          } ${p === '...' ? 'pointer-events-none opacity-60' : ''}`}
+        >
+          {p}
+        </button>
+      ));
+    })()}
+
+    <button
+      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+      disabled={currentPage === totalPages}
+      className="px-2 py-[2px] border rounded border-gray-400 text-gray-600 disabled:opacity-40"
+    >
+      Next
+    </button>
+  </div>
+</div>
+
 
       <br /><br />
       <div className="flex items-center gap-4 mt-6">
