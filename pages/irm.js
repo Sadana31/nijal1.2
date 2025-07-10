@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function IRMPage() {
   const [data, setData] = useState([]);
@@ -110,11 +110,7 @@ export default function IRMPage() {
       .catch(() => toast.error('Failed to fetch data'));
   }, []);
 
-  useEffect(() => {
-    handleSearch();
-  }, [searchValue, searchField]);
-
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     const keyMap = {
       'Remittance Ref No': 'RemittanceRefNumber',
       'Bank Name': 'BankName',
@@ -122,9 +118,18 @@ export default function IRMPage() {
       'IE Code': 'IECode'
     };
     const key = keyMap[searchField];
-    const filtered = data.filter((row) => row[key]?.toLowerCase().includes(searchValue.toLowerCase()));
+    const filtered = data.filter((row) =>
+      row[key]?.toLowerCase().includes(searchValue.toLowerCase())
+    );
     setFilteredData(filtered);
-  };
+  }, [data, searchField, searchValue]);
+  
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch]);
+
+  
+
 
   const sanitizeSearchInput = (field, value) => {
   let val = value;

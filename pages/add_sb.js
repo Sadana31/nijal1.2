@@ -25,6 +25,15 @@ export default function AddShippingBill() {
     error.textContent = message;
   }
 
+  function handleBlur(e) {
+    validateField(e.target);
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Enter') e.preventDefault();
+  }
+
+
   function clearError(input) {
     let error = input.nextElementSibling;
     if (error && error.classList.contains('error-message')) {
@@ -163,17 +172,13 @@ export default function AddShippingBill() {
     const form = formRef.current;
     const inputs = form.querySelectorAll('input');
 
-    const disableEnterKey = (e) => {
-      if (e.key === 'Enter') e.preventDefault();
-    };
-
     inputs.forEach((input) => {
       input.addEventListener('input', handleInput);
-      input.addEventListener('blur', () => validateField(input));
-      input.addEventListener('keydown', disableEnterKey);
+      input.addEventListener('blur', handleBlur);
+      input.addEventListener('keydown', handleKeydown);
     });
 
-    form.addEventListener('submit', async (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault();
       if (isSubmitting) return;
 
@@ -214,15 +219,20 @@ export default function AddShippingBill() {
         console.error(error);
         setIsSubmitting(false);
       }
-    });
+    };
+
+    form.addEventListener('submit', handleSubmit);
 
     return () => {
       inputs.forEach((input) => {
         input.removeEventListener('input', handleInput);
-        input.removeEventListener('keydown', disableEnterKey);
+        input.removeEventListener('blur', handleBlur);
+        input.removeEventListener('keydown', handleKeydown);
       });
+      form.removeEventListener('submit', handleSubmit);
     };
   }, [isSubmitting]);
+
 
   const shippingBillFields = [
     ['shippingBillNo', 'Shipping Bill*'],

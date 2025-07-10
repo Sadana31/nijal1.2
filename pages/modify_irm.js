@@ -14,105 +14,88 @@ export default function ModifyIRM() {
   const decimalFields = ['remittanceAmount', 'utilizedAmount', 'outstandingAmount'];
   const countryCodeFields = ['remitterCountryCode'];
 
-  useEffect(() => {
-    if (id) {
-      fetch(`https://nijal-backend.onrender.com/api/irm/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          const convertDate = (dateStr) => {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length === 3 && parts[2].length === 4) {
-              return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return '';
-            return d.toISOString().split('T')[0];
-          };
-
-          const cleanValue = (val) => val === 'NA' || val === 'N/A' ? '' : val;
-          const cleanedData = Object.fromEntries(
-            Object.entries(data).map(([key, value]) => [key, typeof value === 'string' ? cleanValue(value) : value])
-          );
-
-          const normalized = {
-            adCode: data.adCode || data.ADCode || '',
-            bankName: data.bankName || data.BankName || '',
-            ieCode: data.ieCode || data.IECode || '',
-            remittanceRefNo: data.remittanceRefNo || data.RemittanceRefNumber || '',
-            remittanceDate: convertDate(data.remittanceDate || data.RemittanceDate),
-            purposeCode: data.purposeCode || data.PurposeCode || '',
-            remittanceCurrency: data.remittanceCurrency || data.RemittanceCurrency || '',
-            remittanceAmount: data.remittanceAmount || data.RemittanceAmount || '',
-            utilizedAmount: data.utilizedAmount || data.UtilizedAmount || '',
-            outstandingAmount: data.outstandingAmount || data.OutstandingAmount || '',
-            remitterName: data.remitterName || data.RemitterName || '',
-            remitterAddress: data.remitterAddress || data.RemitterAddress || '',
-            remitterCountryCode: data.remitterCountryCode || data.RemitterCountryCode || '',
-            remitterBank: data.remitterBank || data.RemitterBank || '',
-            otherBankRef: data.otherBankRef || data.OtherBankRefNumber || '',
-            status: data.status || data.Status || '',
-            remittanceType: data.remittanceType || data.RemittanceType || '',
-          };
-
-          setFormData(normalized);
-        })
-        .catch(() => toast.error('Failed to load IRM data'));
+  function sanitizeValue(id, value) {
+    if (decimalFields.includes(id)) {
+      let val = value.replace(/[^0-9.]/g, '');
+      const firstDecimal = val.indexOf('.');
+      if (firstDecimal !== -1) {
+        val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
+      }
+      const parts = val.split('.');
+      parts[0] = parts[0].slice(0, 18);
+      if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2);
+        val = parts[0] + '.' + parts[1];
+      } else {
+        val = parts[0];
+      }
+      return val;
     }
-  }, [id]);
+
+    if (countryCodeFields.includes(id) || id === 'remittanceCurrency') {
+      return value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+    }
+
+    if (id === 'ieCode') {
+      return value.replace(/\D/g, '').slice(0, 10);
+    }
+
+    return value.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
+  }
+
+function handleInput(e) {
+  const input = e.target;
+  const id = input.id;
+  const sanitized = sanitizeValue(id, input.value);
+  input.value = sanitized;
+  setFormData((prev) => ({ ...prev, [id]: sanitized }));
+}
+
 
   useEffect(() => {
     const form = formRef.current;
+    const inputs = form.querySelectorAll('input');
 
-    function handleInput(e) {
-      const input = e.target;
-      const id = input.id;
+    function handleSubmit(e) {
+      e.preventDefault();
+      (async () => {
+        try {
+          const response = await fetch(`https://nijal-backend.onrender.com/api/irm/update/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
 
-      if (input.maxLength > 0 && input.value.length > input.maxLength) {
-        input.value = input.value.slice(0, input.maxLength);
-      }
-
-      if (decimalFields.includes(id)) {
-        let val = input.value;
-        const selectionStart = input.selectionStart;
-
-        val = val.replace(/[^0-9.]/g, '');
-
-        const firstDecimal = val.indexOf('.');
-        if (firstDecimal !== -1) {
-          val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
+          if (response.ok) {
+            toast.success('IRM entry updated!', { duration: 1500 });
+            setTimeout(() => router.push('/irm'), 1500);
+          } else {
+            const err = await response.json();
+            toast.error(err.message || 'Update failed');
+          }
+        } catch (error) {
+          toast.error('Network error while updating.');
+          console.error(error);
         }
-
-        const parts = val.split('.');
-        parts[0] = parts[0].slice(0, 18);
-        if (parts.length > 1) {
-          parts[1] = parts[1].slice(0, 2);
-          val = parts[0] + '.' + parts[1];
-        } else {
-          val = parts[0];
-        }
-
-        input.value = val;
-        input.setSelectionRange(selectionStart, selectionStart);
-        setFormData((prev) => ({ ...prev, [id]: val }));
-        return;
-      }
-
-      if (countryCodeFields.includes(id) || id === 'remittanceCurrency') {
-        input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
-        setFormData((prev) => ({ ...prev, [id]: input.value }));
-        return;
-      }
-
-      if (id === 'ieCode') {
-        input.value = input.value.replace(/\D/g, '').slice(0, 10);
-        setFormData((prev) => ({ ...prev, [id]: input.value }));
-        return;
-      }
-
-      input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
-      setFormData((prev) => ({ ...prev, [id]: input.value }));
+      })();
     }
+
+    inputs.forEach((input) => {
+      input.addEventListener('input', handleInput);
+    });
+    form.addEventListener('submit', handleSubmit);
+
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener('input', handleInput);
+      });
+      form.removeEventListener('submit', handleSubmit);
+    };
+  }, [formData, id, router]);
+
+
+  useEffect(() => {
+    const form = formRef.current;
 
     function handleSubmit(e) {
       e.preventDefault();

@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 
 export default function AddIRM() {
   const router = useRouter();
-  const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef(null);
 
@@ -69,6 +68,12 @@ export default function AddIRM() {
     return true;
   };
 
+  const handleBlur = (e) => validateField(e.target);
+    const handleInputWrapper = (e) => handleInput(e);
+    const handleKeydown = (e) => {
+      if (e.key === 'Enter') e.preventDefault();
+    };
+
   const handleInput = (e) => {
     const input = e.target;
     const id = input.id;
@@ -113,24 +118,21 @@ export default function AddIRM() {
     const form = formRef.current;
     const inputs = form.querySelectorAll('input');
 
-    const disableEnterKey = (e) => {
-      if (e.key === 'Enter') e.preventDefault();
-    };
-
     inputs.forEach((input) => {
-      input.addEventListener('input', handleInput);
-      input.addEventListener('blur', () => validateField(input));
-      input.addEventListener('keydown', disableEnterKey);
+      input.addEventListener('input', handleInputWrapper);
+      input.addEventListener('blur', handleBlur);
+      input.addEventListener('keydown', handleKeydown);
     });
 
     return () => {
       inputs.forEach((input) => {
-        input.removeEventListener('input', handleInput);
-        input.removeEventListener('blur', () => validateField(input));
-        input.removeEventListener('keydown', disableEnterKey);
+        input.removeEventListener('input', handleInputWrapper);
+        input.removeEventListener('blur', handleBlur);
+        input.removeEventListener('keydown', handleKeydown);
       });
     };
   }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

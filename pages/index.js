@@ -1,10 +1,11 @@
   'use client';
 
   import { useEffect, useState } from 'react';
-  import { useRef } from 'react';
+  import { useRef, useCallback } from 'react';
   import { useRouter } from 'next/router';
   import {toast} from 'sonner';
-  
+  import React from 'react'; 
+
   export default function SBPage() {
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -72,6 +73,19 @@
         }
       };
 
+      const handleSearch = useCallback(() => {
+        const searchKey = {
+          'Shipping Bill': 'shippingBillNo',
+          'Form No': 'formNo',
+          'Port Code': 'portCode',
+          'Bank Name': 'bankName'
+        }[searchField];
+
+        const filtered = data.filter((row) =>
+          row[searchKey]?.toLowerCase().includes(searchValue.toLowerCase())
+        );
+        setFilteredData(filtered);
+      }, [data, searchField, searchValue]);
 
     useEffect(() => {
       fetch('https://nijal-backend.onrender.com/api/sb')
@@ -85,7 +99,7 @@
 
     useEffect(() => {
       handleSearch();
-    }, [searchValue, searchField]);
+    }, [handleSearch]);
 
 
 
@@ -95,19 +109,8 @@
       );
     };
 
-    const handleSearch = () => {
-      const searchKey = {
-        'Shipping Bill': 'shippingBillNo',
-        'Form No': 'formNo',
-        'Port Code': 'portCode',
-        'Bank Name': 'bankName'
-      }[searchField];
+    
 
-      const filtered = data.filter((row) =>
-        row[searchKey]?.toLowerCase().includes(searchValue.toLowerCase())
-      );
-      setFilteredData(filtered);
-    };
 
     const placeholders = {
       'Shipping Bill': 'e.g. 123456',

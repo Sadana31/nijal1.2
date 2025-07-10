@@ -15,6 +15,37 @@ export default function ModifyShippingBill() {
   const integerFields = ['shippingBillNo'];
   const countryCodeFields = ['buyerCountryCode', 'consigneeCountryCode'];
 
+  const handleInput = (e) => {
+    const input = e.target;
+    const id = input.id;
+    let val = input.value;
+
+    if (countryCodeFields.includes(id)) {
+      val = val.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+    } else if (integerFields.includes(id)) {
+      val = val.replace(/\D/g, '').slice(0, 10);
+    } else if (decimalFields.includes(id)) {
+      val = val.replace(/[^0-9.]/g, '');
+      const firstDecimal = val.indexOf('.');
+      if (firstDecimal !== -1) {
+        val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
+      }
+      const parts = val.split('.');
+      parts[0] = parts[0].slice(0, 18);
+      if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2);
+        val = parts[0] + '.' + parts[1];
+      } else {
+        val = parts[0];
+      }
+    } else {
+      val = val.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
+    }
+
+    input.value = val;
+    setFormData((prev) => ({ ...prev, [id]: val }));
+  };
+
   useEffect(() => {
     if (id) {
       fetch(`https://nijal-backend.onrender.com/api/sb/${id}`)
@@ -59,59 +90,6 @@ export default function ModifyShippingBill() {
       if (e.key === 'Enter') e.preventDefault();
     };
 
-    const handleInput = (e) => {
-      const input = e.target;
-      const id = input.id;
-
-      if (countryCodeFields.includes(id)) {
-        input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
-        return;
-      }
-
-      if (input.maxLength > 0 && input.value.length > input.maxLength) {
-        input.value = input.value.slice(0, input.maxLength);
-      }
-
-      if (integerFields.includes(id)) {
-        input.value = input.value.replace(/\D/g, '');
-        return;
-      }
-
-      if (["shippingBillDate", "invoiceDate", "blDate"].includes(id)) {
-        const parts = input.value.split('-');
-        if (parts[0] && parts[0].length > 4) {
-          parts[0] = parts[0].slice(0, 4);
-          input.value = parts.join('-');
-        }
-      }
-
-      if (decimalFields.includes(id)) {
-        let val = input.value;
-        const selectionStart = input.selectionStart;
-
-        val = val.replace(/[^0-9.]/g, '');
-        const firstDecimal = val.indexOf('.');
-        if (firstDecimal !== -1) {
-          val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
-        }
-
-        const parts = val.split('.');
-        parts[0] = parts[0].slice(0, 18);
-        if (parts.length > 1) {
-          parts[1] = parts[1].slice(0, 2);
-          val = parts[0] + '.' + parts[1];
-        } else {
-          val = parts[0];
-        }
-
-        input.value = val;
-        input.setSelectionRange(selectionStart, selectionStart);
-        return;
-      }
-
-      input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '');
-    };
-
     inputs.forEach((input) => {
       input.addEventListener('input', handleInput);
       input.addEventListener('blur', () => validateField(input));
@@ -127,17 +105,6 @@ export default function ModifyShippingBill() {
     };
   }, []);
 
-  const showError = (input, message) => {
-    let error = input.nextElementSibling;
-    if (!error || !error.classList.contains('error-message')) {
-      error = document.createElement('div');
-      error.className = 'error-message';
-      error.style.color = 'red';
-      error.style.fontSize = '0.9em';
-      input.after(error);
-    }
-    error.textContent = message;
-  };
 
   const clearError = (input) => {
     const error = input.nextElementSibling;
