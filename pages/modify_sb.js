@@ -46,6 +46,18 @@ export default function ModifyShippingBill() {
     setFormData((prev) => ({ ...prev, [id]: val }));
   };
 
+  const showError = (input, message) => {
+    let error = input.nextElementSibling;
+    if (!error || !error.classList.contains('error-message')) {
+      error = document.createElement('div');
+      error.className = 'error-message text-red-600 text-xs mt-1';
+      input.parentNode.appendChild(error);
+    }
+    error.textContent = message;
+    input.classList.add('border-red-500');
+  };
+
+
   useEffect(() => {
     if (id) {
       fetch(`https://nijal-backend.onrender.com/api/sb/${id}`)
@@ -266,7 +278,7 @@ export default function ModifyShippingBill() {
                 id={name}
                 name={name}
                 maxLength={50}
-                required
+                formNoValidate
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className="w-full border border-gray-400 rounded px-3 py-2"

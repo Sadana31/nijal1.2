@@ -172,7 +172,7 @@ function handleInput(e) {
                 type={name === 'remittanceDate' ? 'date' : 'text'}
                 id={name}
                 name={name}
-                required
+                formNoValidate
                 maxLength={name === 'remittanceCurrency' ? 3 : 50}
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}

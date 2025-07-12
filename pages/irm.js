@@ -201,15 +201,21 @@ export default function IRMPage() {
       const res = await fetch(`https://nijal-backend.onrender.com/api/mapping/history/irm/${id}`);
       const history = await res.json();
 
-      if (!Array.isArray(history)) return toast.error('No mapping history found.');
+      // If it's not an array (some error), fallback to empty array
+      const mappedShippingBills = Array.isArray(history) ? history : [];
 
-      setModalData({ ...details, mappedShippingBills: history });
+      setModalData({ ...details, mappedShippingBills });
       setModalVisible(true);
     } catch (err) {
       console.error('Fetch error:', err);
       toast.error('Failed to load mapping history');
+
+      // Still show modal with no history
+      setModalData({ ...details, mappedShippingBills: [] });
+      setModalVisible(true);
     }
   };
+
 
 
   const sortedData = [...filteredData].sort((a, b) => {
@@ -319,11 +325,14 @@ export default function IRMPage() {
                   <td className="px-2 py-2">
                     <input
                       type="radio"
+                      name="irmSelection"
                       checked={selectedIRMs.has(row.RemittanceRefNumber)}
-                      onChange={(e) => {
-                        const newSet = new Set(selectedIRMs);
-                        if (e.target.checked) newSet.add(row.RemittanceRefNumber);
-                        else newSet.delete(row.RemittanceRefNumber);
+                      onChange={() => {
+                        const isSelected = selectedIRMs.has(row.RemittanceRefNumber);
+                        const newSet = new Set();
+                        if (!isSelected) {
+                          newSet.add(row.RemittanceRefNumber);
+                        }
                         setSelectedIRMs(newSet);
                       }}
                     />
@@ -437,7 +446,6 @@ export default function IRMPage() {
 </div>
 
 
-      <br /><br />
       <div className="flex items-center gap-4 mt-6">
         {['Details', 'Modify IRM', 'Proceed to SB Mapping'].map((text, i) => (
           <button
@@ -479,7 +487,6 @@ export default function IRMPage() {
               })}
 
 
-              {modalData.mappedShippingBills && modalData.mappedShippingBills.length > 0 && (
                 <div className="px-8 pb-10 col-span-full">
                   <h3 className="text-xl font-semibold text-[#1f2937] mt-10 mb-4">Mapped Shipping Bills</h3>
                   <div className="overflow-x-auto border rounded-xl shadow-sm bg-white">
@@ -527,7 +534,6 @@ export default function IRMPage() {
                     </table>
                   </div>
                 </div>
-              )}
             </div>
           </div>
         </div>
