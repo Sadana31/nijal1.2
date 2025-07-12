@@ -500,27 +500,34 @@ export default function IRMPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {modalData.mappedShippingBills.map((sb, i) => (
-                          <tr key={i} className="border-t hover:bg-gray-50">
-                            <td className="px-4 py-2">{sb.shippingBillNo}</td>
-                            <td className="px-4 py-2">{sb.formNo}</td>
-                            <td className="px-4 py-2">{sb.shippingBillDate}</td>
-                            <td className="px-4 py-2">{sb.portCode}</td>
-                            <td className="px-4 py-2">{sb.bankName}</td>
-                            <td className="px-4 py-2">{sb.fobCurrency}</td>
-                            <td className="px-4 py-2">{sb.exportBillValue}</td>
-                            <td className="px-4 py-2">{sb.billOutstandingValue || sb.outstandingValue}</td>
-                            <td className="px-4 py-2">{sb.buyerName}</td>
-                            <td className="px-4 py-2">{sb.buyerCountryCode}</td>
-                            <td className="px-4 py-2">{sb.sbUtilizationAmount}</td>
+                        {modalData.mappedShippingBills && modalData.mappedShippingBills.length > 0 ? (
+                          modalData.mappedShippingBills.map((sb, i) => (
+                            <tr key={i} className="border-t hover:bg-gray-50">
+                              <td className="px-4 py-2">{sb.shippingBillNo}</td>
+                              <td className="px-4 py-2">{sb.formNo}</td>
+                              <td className="px-4 py-2">{sb.shippingBillDate}</td>
+                              <td className="px-4 py-2">{sb.portCode}</td>
+                              <td className="px-4 py-2">{sb.bankName}</td>
+                              <td className="px-4 py-2">{sb.fobCurrency}</td>
+                              <td className="px-4 py-2">{sb.exportBillValue}</td>
+                              <td className="px-4 py-2">{sb.billOutstandingValue || sb.outstandingValue}</td>
+                              <td className="px-4 py-2">{sb.buyerName}</td>
+                              <td className="px-4 py-2">{sb.buyerCountryCode}</td>
+                              <td className="px-4 py-2">{sb.sbUtilizationAmount}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td className="px-4 py-4 text-center text-gray-500 italic" colSpan={11}>
+                              No mapping history
+                            </td>
                           </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
-
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
