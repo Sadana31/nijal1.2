@@ -119,7 +119,7 @@
       setModalData(details);
 
       try {
-        const res = await fetch(`http://localhost:5000/api/mapping/history/sb/${selectedSBNo}`);
+        const res = await fetch(`https://nijal-backend.onrender.com/api/mapping/history/sb/${selectedSBNo}`);
         const history = await res.json();
         setMappingHistory(history);
       } catch (err) {

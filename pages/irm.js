@@ -198,7 +198,7 @@ export default function IRMPage() {
     if (!details) return toast.error('Selected IRM not found');
 
     try {
-      const res = await fetch(`http://localhost:5000/api/mapping/history/irm/${id}`);
+      const res = await fetch(`https://nijal-backend.onrender.com/api/mapping/history/irm/${id}`);
       const history = await res.json();
 
       if (!Array.isArray(history)) return toast.error('No mapping history found.');

@@ -166,7 +166,7 @@ const handleSubmitMappingIRMToSB = async () => {
   };
 
   try {
-    const res = await fetch('http://localhost:5000/api/mapping/irmToSB', {
+    const res = await fetch('https://nijal-backend.onrender.com/api/mapping/irmToSB', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -232,7 +232,7 @@ const handleSubmitMappingIRMToSB = async () => {
     console.log("Sending payload:", payload);
 
     try {
-      const res = await fetch('http://localhost:5000/api/mapping/sbToIRM', {
+      const res = await fetch('https://nijal-backend.onrender.com/api/mapping/sbToIRM', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
