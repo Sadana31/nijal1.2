@@ -11,7 +11,7 @@ export default function IRMPage() {
   const [searchValue, setSearchValue] = useState('');
   const [expandedRows, setExpandedRows] = useState([]);
   const [entriesToShow, setEntriesToShow] = useState(10);
-  const [selectedIRMs, setSelectedIRMs] = useState(null);
+  const [selectedIRMs, setSelectedIRMs] = useState(new Set());
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [sortField, setSortField] = useState('');
@@ -190,13 +190,27 @@ export default function IRMPage() {
     );
   };
 
-  const showSelectedDetails = () => {
+  const showSelectedDetails = async () => {
     if (selectedIRMs.size !== 1) return toast.error('Select exactly one IRM entry.');
     const id = [...selectedIRMs][0];
     const details = data.find((row) => row.RemittanceRefNumber === id);
-    setModalData(details);
-    setModalVisible(true);
+
+    if (!details) return toast.error('Selected IRM not found');
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/mapping/history/irm/${id}`);
+      const history = await res.json();
+
+      if (!Array.isArray(history)) return toast.error('No mapping history found.');
+
+      setModalData({ ...details, mappedShippingBills: history });
+      setModalVisible(true);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      toast.error('Failed to load mapping history');
+    }
   };
+
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortField) return 0;
@@ -451,12 +465,62 @@ export default function IRMPage() {
                 </button>
             </div>
             <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-5 gap-x-10 text-sm text-[#1c2e3d]">
-              {Object.entries(modalData).map(([label, value], i) => (
-                <div key={i}>
-                  <div className="font-semibold text-[#1f2937]">{label}</div>
-                  <div className="text-gray-800">{value || '-'}</div>
-                </div>
-              ))}
+              {Object.entries(modalData).map(([label, value], i) => {
+                if (typeof value === 'object' && value !== null) {
+                  return null; // or handle separately if needed
+                }
+
+                return (
+                  <div key={i}>
+                    <div className="font-semibold text-[#1f2937]">{label}</div>
+                    <div className="text-gray-800">{value || '-'}</div>
+                  </div>
+                );
+              })}
+
+
+              {modalData.mappedShippingBills && modalData.mappedShippingBills.length > 0 && (
+                <div className="px-8 pb-10 col-span-full">
+                  <h3 className="text-xl font-semibold text-[#1f2937] mt-10 mb-4">Mapped Shipping Bills</h3>
+                  <div className="overflow-x-auto border rounded-xl shadow-sm bg-white">
+                    <table className="w-full text-sm text-gray-800 border-collapse">
+                      <thead>
+                        <tr className="bg-[#72c1c7] text-black font-semibold">
+                          <th className="px-4 py-3 text-left">Shipping Bill</th>
+                          <th className="px-4 py-3 text-left">Form No</th>
+                          <th className="px-4 py-3 text-left">SB Date</th>
+                          <th className="px-4 py-3 text-left">Port Code</th>
+                          <th className="px-4 py-3 text-left">Bank Name</th>
+                          <th className="px-4 py-3 text-left">FOB Currency</th>
+                          <th className="px-4 py-3 text-left">Export Bill Value</th>
+                          <th className="px-4 py-3 text-left">Outstanding</th>
+                          <th className="px-4 py-3 text-left">Buyer Name</th>
+                          <th className="px-4 py-3 text-left">Buyer Country</th>
+                          <th className="px-4 py-3 text-left">Utilized</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {modalData.mappedShippingBills.map((sb, i) => (
+                          <tr key={i} className="border-t hover:bg-gray-50">
+                            <td className="px-4 py-2">{sb.shippingBillNo}</td>
+                            <td className="px-4 py-2">{sb.formNo}</td>
+                            <td className="px-4 py-2">{sb.shippingBillDate}</td>
+                            <td className="px-4 py-2">{sb.portCode}</td>
+                            <td className="px-4 py-2">{sb.bankName}</td>
+                            <td className="px-4 py-2">{sb.fobCurrency}</td>
+                            <td className="px-4 py-2">{sb.exportBillValue}</td>
+                            <td className="px-4 py-2">{sb.billOutstandingValue || sb.outstandingValue}</td>
+                            <td className="px-4 py-2">{sb.buyerName}</td>
+                            <td className="px-4 py-2">{sb.buyerCountryCode}</td>
+                            <td className="px-4 py-2">{sb.sbUtilizationAmount}</td>
+                          </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
             </div>
           </div>
         </div>

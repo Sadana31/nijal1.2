@@ -22,6 +22,7 @@
 
     const [currentPage, setCurrentPage] = useState(1);
     const [entriesPerPage, setEntriesPerPage] = useState(10); // default 10
+    const [mappingHistory, setMappingHistory] = useState([]);
 
     const router = useRouter();
 
@@ -107,17 +108,28 @@
       'Bank Name': 'e.g. SBI'
     };
 
-    const showSelectedDetails = () => {
+    const showSelectedDetails = async () => {
       if (!selectedSB) {
         alert("Please select exactly one Shipping Bill to view details.");
         return;
       }
 
-      const selectedSBNo = [...selectedSB];
+      const selectedSBNo = selectedSB.shippingBillNo;
       const details = data.find((row) => row.shippingBillNo === selectedSBNo);
       setModalData(details);
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/mapping/history/sb/${selectedSBNo}`);
+        const history = await res.json();
+        setMappingHistory(history);
+      } catch (err) {
+        console.error("Failed to fetch mapping history:", err);
+        setMappingHistory([]);
+      }
+
       setModalVisible(true);
     };
+
 
 
     const exportToCSV = () => {
@@ -501,6 +513,49 @@
           </div>
         ))}
       </div>
+
+      {/* Mapping History Table Styled to Match Screenshot */}
+{mappingHistory.length > 0 && (
+  <div className="px-8 pb-10">
+    <h3 className="text-xl font-semibold text-[#1f2937] mt-10 mb-4">IRM Mapping History</h3>
+    <div className="overflow-x-auto border rounded-xl shadow-sm bg-white">
+      <table className="w-full text-sm text-gray-800 border-collapse">
+        <thead>
+          <tr className="bg-[#72c1c7] text-black font-semibold">
+            <th className="px-4 py-3 text-left">Bank Name</th>
+            <th className="px-4 py-3 text-left">Remittance Ref No</th>
+            <th className="px-4 py-3 text-left">Remittance Date</th>
+            <th className="px-4 py-3 text-left">Purpose Code</th>
+            <th className="px-4 py-3 text-left">Currency</th>
+            <th className="px-4 py-3 text-left">Remittance Amount</th>
+            <th className="px-4 py-3 text-left">Outstanding</th>
+            <th className="px-4 py-3 text-left">Remitter Name</th>
+            <th className="px-4 py-3 text-left">Utilized</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mappingHistory.map((entry, idx) =>
+            entry.mappedIRMs.map((irm, i) => (
+              <tr key={`${idx}-${i}`} className="border-t hover:bg-gray-50">
+                <td className="px-4 py-2">{irm.BankName}</td>
+                <td className="px-4 py-2">{irm.RemittanceRefNumber}</td>
+                <td className="px-4 py-2">{irm.RemittanceDate}</td>
+                <td className="px-4 py-2">{irm.PurposeCode}</td>
+                <td className="px-4 py-2">{irm.RemittanceCurrency}</td>
+                <td className="px-4 py-2">{irm.RemittanceAmount}</td>
+                <td className="px-4 py-2">{irm.OutstandingAmount}</td>
+                <td className="px-4 py-2">{irm.RemitterName}</td>
+                <td className="px-4 py-2">{irm.irmUtilizationAmount || irm.UtilizedAmount || '-'}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+
     </div>
   </div>
 )}

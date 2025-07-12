@@ -23,7 +23,28 @@ export default function MappingPage() {
   useEffect(() => {
     const storedIRM = sessionStorage.getItem("selectedRow");
     if (storedIRM) {
-      setSelectedIRM(JSON.parse(storedIRM));
+      const rawIRM = JSON.parse(storedIRM);
+      const normalizedIRM = {
+        ...rawIRM,
+        RemittanceRefNumber: rawIRM.RemittanceRefNumber || rawIRM.remittanceRefNo,
+        BankName: rawIRM.BankName || rawIRM.bankName,
+        IECode: rawIRM.IECode || rawIRM.ieCode,
+        RemittanceDate: rawIRM.RemittanceDate || rawIRM.remittanceDate,
+        PurposeCode: rawIRM.PurposeCode || rawIRM.purposeCode,
+        RemittanceCurrency: rawIRM.RemittanceCurrency || rawIRM.remittanceCurrency,
+        RemittanceAmount: rawIRM.RemittanceAmount || rawIRM.remittanceAmount,
+        OutstandingAmount: rawIRM.OutstandingAmount || rawIRM.outstandingAmount,
+        RemitterName: rawIRM.RemitterName || rawIRM.remitterName,
+        RemitterAddress: rawIRM.RemitterAddress || rawIRM.remitterAddress,
+        RemitterCountryCode: rawIRM.RemitterCountryCode || rawIRM.remitterCountryCode,
+        RemitterBank: rawIRM.RemitterBank || rawIRM.remitterBank,
+        OtherBankRefNumber: rawIRM.OtherBankRefNumber || rawIRM.otherBankRef,
+        Status: rawIRM.Status || rawIRM.status,
+        RemittanceType: rawIRM.RemittanceType || rawIRM.remittanceType,
+        UtilizedAmount: rawIRM.UtilizedAmount || rawIRM.utilizedAmount,
+        ADCode: rawIRM.ADCode || rawIRM.adCode,
+      };
+      setSelectedIRM(normalizedIRM);
     }
   }, []);
 
