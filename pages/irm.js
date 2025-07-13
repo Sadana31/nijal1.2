@@ -39,7 +39,7 @@ export default function IRMPage() {
           }
 
           const selectedIRMNo = [...selectedIRMs][0];
-          const selectedRow = data.find((row) => row.remittanceRefNo === selectedIRMNo);
+          const selectedRow = data.find((row) => row.RemittanceRefNo === selectedIRMNo);
 
           if (!selectedRow) {
             toast.error("Selected IRM not found.");
@@ -58,7 +58,7 @@ export default function IRMPage() {
                 }
       
                 const selectedIRMNo = [...selectedIRMs][0];
-                const selectedRow = data.find((row) => row.remittanceRefNo === selectedIRMNo);
+                const selectedRow = data.find((row) => row.RemittanceRefNo === selectedIRMNo);
       
                 if (!selectedRow) {
                   toast.error("Selected IRM not found.");
@@ -111,7 +111,7 @@ export default function IRMPage() {
       .then((result) => {
         const normalized = result.map(row => ({
           ...row,
-          remittanceRefNo: row.remittanceRefNo || row.remittanceRefNo,
+          RemittanceRefNo: row.RemittanceRefNo || row.RemittanceRefNo,
           bankName: row.bankName || row.BankName,
           ieCode: row.ieCode || row.IECode,
           remittanceDate: row.remittanceDate || row.RemittanceDate,
@@ -136,7 +136,7 @@ export default function IRMPage() {
 
   const handleSearch = useCallback(() => {
     const keyMap = {
-      'Remittance Ref No': 'remittanceRefNo',
+      'Remittance Ref No': 'RemittanceRefNo',
       'Bank Name': 'BankName',
       'AD Code': 'ADCode',
       'IE Code': 'IECode'
@@ -212,7 +212,7 @@ export default function IRMPage() {
   const showSelectedDetails = async () => {
     if (selectedIRMs.size !== 1) return toast.error('Select exactly one IRM entry.');
     const id = [...selectedIRMs][0];
-    const details = data.find((row) => row.remittanceRefNo === id);
+    const details = data.find((row) => row.RemittanceRefNo === id);
 
     if (!details) return toast.error('Selected IRM not found');
 
@@ -259,7 +259,7 @@ export default function IRMPage() {
   };
 
   const sortableHeaders = [
-    { label: 'Remittance Ref No', key: 'remittanceRefNo' },
+    { label: 'Remittance Ref No', key: 'RemittanceRefNo' },
     { label: 'Bank Name', key: 'bankName' },
     { label: 'IE Code', key: 'ieCode' },
     { label: 'Remittance Date', key: 'remittanceDate' },
@@ -346,12 +346,12 @@ export default function IRMPage() {
                     <input
                       type="radio"
                       name="irmSelection"
-                      checked={selectedIRMs.has(row.remittanceRefNo)}
+                      checked={selectedIRMs.has(row.RemittanceRefNo)}
                       onChange={() => {
-                        const isSelected = selectedIRMs.has(row.remittanceRefNo);
+                        const isSelected = selectedIRMs.has(row.RemittanceRefNo);
                         const newSet = new Set();
                         if (!isSelected) {
-                          newSet.add(row.remittanceRefNo);
+                          newSet.add(row.RemittanceRefNo);
                         }
                         setSelectedIRMs(newSet);
                       }}
@@ -362,7 +362,7 @@ export default function IRMPage() {
                       {expandedRows.includes(row._id) ? '−' : '+'}
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-black">{row.remittanceRefNo}</td>
+                  <td className="px-4 py-2 text-black">{row.RemittanceRefNo}</td>
                   <td className="px-4 py-2 text-black">{row.bankName}</td>
                   <td className="px-4 py-2 text-black">{row.ieCode}</td>
                   <td className="px-4 py-2 text-black">{formatDate(row.remittanceDate)}</td>
