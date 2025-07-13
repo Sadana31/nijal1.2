@@ -1,7 +1,8 @@
-// placeholder for irm.model.js
+// irm.model.js
 const mongoose = require('mongoose');
 
 const irmSchema = new mongoose.Schema({
+  SrNo: Number,
   adCode: String,
   bankName: String,
   ieCode: String,
@@ -11,14 +12,14 @@ const irmSchema = new mongoose.Schema({
   remittanceCurrency: String,
   remittanceAmount: Number,
   utilizedAmount: Number,
-  OutstandingAmount: Number,
+  outstandingAmount: Number,
   remitterName: String,
   remitterAddress: String,
   remitterCountryCode: String,
   remitterBank: String,
-  otherBankRefNo: String,
+  otherBankRef: String,
   status: String,
   remittanceType: String,
-},{ collection: 'irm' }); 
+}, { collection: 'irm' });
 
 module.exports = mongoose.model('IRM', irmSchema);

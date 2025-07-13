@@ -39,7 +39,7 @@ export default function IRMPage() {
           }
 
           const selectedIRMNo = [...selectedIRMs][0];
-          const selectedRow = data.find((row) => row.RemittanceRefNumber === selectedIRMNo);
+          const selectedRow = data.find((row) => row.RemittanceRefNo === selectedIRMNo);
 
           if (!selectedRow) {
             toast.error("Selected IRM not found.");
@@ -58,7 +58,7 @@ export default function IRMPage() {
                 }
       
                 const selectedIRMNo = [...selectedIRMs][0];
-                const selectedRow = data.find((row) => row.RemittanceRefNumber === selectedIRMNo);
+                const selectedRow = data.find((row) => row.RemittanceRefNo === selectedIRMNo);
       
                 if (!selectedRow) {
                   toast.error("Selected IRM not found.");
@@ -76,6 +76,25 @@ export default function IRMPage() {
               }
   };
 
+  const formatDate = (input) => {
+        if (!input || typeof input !== 'string') return '';
+
+        // If it's already dd-mm-yyyy, return as is
+        if (/^\d{2}-\d{2}-\d{4}$/.test(input)) {
+          return input;
+        }
+
+        // If it's ISO or yyyy-mm-dd, parse and format
+        const date = new Date(input);
+        if (isNaN(date.getTime())) return '';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+      };
+
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -92,22 +111,22 @@ export default function IRMPage() {
       .then((result) => {
         const normalized = result.map(row => ({
           ...row,
-          RemittanceRefNumber: row.RemittanceRefNumber || row.remittanceRefNo,
-          BankName: row.BankName || row.bankName,
-          IECode: row.IECode || row.ieCode,
-          RemittanceDate: row.RemittanceDate || row.remittanceDate,
-          RemittanceAmount: row.RemittanceAmount || row.remittanceAmount,
-          OutstandingAmount: row.OutstandingAmount || row.outstandingAmount,
-          RemitterName: row.RemitterName || row.remitterName,
-          Status: row.Status || row.status,
-          ADCode: row.ADCode || row.adCode,
-          PurposeCode: row.PurposeCode || row.purposeCode,
-          RemittanceCurrency: row.RemittanceCurrency || row.remittanceCurrency,
-          UtilizedAmount: row.UtilizedAmount || row.utilizedAmount,
-          RemitterAddress: row.RemitterAddress || row.remitterAddress,
-          RemitterCountryCode: row.RemitterCountryCode || row.remitterCountryCode,
-          RemitterBank: row.RemitterBank || row.remitterBank,
-          OtherBankRefNumber: row.OtherBankRefNumber || row.otherBankRef
+          remittanceRefNo: row.RemittanceRefNo || row.RemittanceRefNo,
+          bankName: row.bankName || row.BankName,
+          ieCode: row.ieCode || row.IECode,
+          remittanceDate: row.remittanceDate || row.RemittanceDate,
+          remittanceAmount: row.remittanceAmount || row.RemittanceAmount,
+          outstandingAmount: row.outstandingAmount || row.OutstandingAmount,
+          remitterName: row.remitterName || row.RemitterName,
+          status: row.status || row.Status,
+          adCode: row.adCode || row.ADCode,
+          purposeCode: row.purposeCode || row.PurposeCode,
+          remittanceCurrency: row.remittanceCurrency || row.RemittanceCurrency,
+          utilizedAmount: row.utilizedAmount || row.UtilizedAmount,
+          remitterAddress: row.remitterAddress || row.RemitterAddress,
+          remitterCountryCode: row.remitterCountryCode || row.RemitterCountryCode,
+          remitterBank: row.remitterBank || row.RemitterBank,
+          otherBankRefNumber: row.otherBankRefNumber || row.OtherBankRefNumber,
         }));
         setData(normalized);
         setFilteredData(normalized);
@@ -117,7 +136,7 @@ export default function IRMPage() {
 
   const handleSearch = useCallback(() => {
     const keyMap = {
-      'Remittance Ref No': 'RemittanceRefNumber',
+      'Remittance Ref No': 'RemittanceRefNo',
       'Bank Name': 'BankName',
       'AD Code': 'ADCode',
       'IE Code': 'IECode'
@@ -193,7 +212,7 @@ export default function IRMPage() {
   const showSelectedDetails = async () => {
     if (selectedIRMs.size !== 1) return toast.error('Select exactly one IRM entry.');
     const id = [...selectedIRMs][0];
-    const details = data.find((row) => row.RemittanceRefNumber === id);
+    const details = data.find((row) => row.RemittanceRefNo === id);
 
     if (!details) return toast.error('Selected IRM not found');
 
@@ -239,13 +258,13 @@ export default function IRMPage() {
   };
 
   const sortableHeaders = [
-    { label: 'Remittance Ref No', key: 'RemittanceRefNumber' },
+    { label: 'Remittance Ref No', key: 'RemittanceRefNo' },
     { label: 'Bank Name', key: 'BankName' },
     { label: 'IE Code', key: 'IECode' },
     { label: 'Remittance Date', key: 'RemittanceDate' },
     { label: 'Remittance Amount', key: 'RemittanceAmount' },
     { label: 'Outstanding Amount', key: 'OutstandingAmount' },
-    { label: 'Remitter Name', key: 'RemitterName' },
+    { label: 'Remitter Name', key: 'remitterName' },
     { label: 'Status', key: 'Status' }
   ];
 
@@ -326,12 +345,12 @@ export default function IRMPage() {
                     <input
                       type="radio"
                       name="irmSelection"
-                      checked={selectedIRMs.has(row.RemittanceRefNumber)}
+                      checked={selectedIRMs.has(row.RemittanceRefNo)}
                       onChange={() => {
-                        const isSelected = selectedIRMs.has(row.RemittanceRefNumber);
+                        const isSelected = selectedIRMs.has(row.RemittanceRefNo);
                         const newSet = new Set();
                         if (!isSelected) {
-                          newSet.add(row.RemittanceRefNumber);
+                          newSet.add(row.RemittanceRefNo);
                         }
                         setSelectedIRMs(newSet);
                       }}
@@ -342,51 +361,53 @@ export default function IRMPage() {
                       {expandedRows.includes(row._id) ? '−' : '+'}
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceRefNumber}</td>
-                  <td className="px-4 py-2 text-black">{row.BankName}</td>
-                  <td className="px-4 py-2 text-black">{row.IECode}</td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceDate}</td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceAmount}</td>
-                  <td className="px-4 py-2 text-black">{row.OutstandingAmount}</td>
-                  <td className="px-4 py-2 text-black">{row.RemitterName}</td>
-                  <td className="px-4 py-2 text-black">{row.Status}</td>
+                  <td className="px-4 py-2 text-black">{row.RemittanceRefNo}</td>
+                  <td className="px-4 py-2 text-black">{row.bankName}</td>
+                  <td className="px-4 py-2 text-black">{row.ieCode}</td>
+                  <td className="px-4 py-2 text-black">{formatDate(row.remittanceDate)}</td>
+                  <td className="px-4 py-2 text-black">{row.remittanceAmount}</td>
+                  <td className="px-4 py-2 text-black">{row.outstandingAmount}</td>
+                  <td className="px-4 py-2 text-black">{row.remitterName}</td>
+                  <td className="px-4 py-2 text-black">{row.status}</td>
                 </tr>
                 {expandedRows.includes(row._id) && (
-  <tr className="bg-gray-50 text-sm">
-    <td colSpan={11}>
-      <table className="w-full border-collapse text-left">
-        <thead className="bg-gray-100 font-semibold text-black">
-          <tr>
-            {[" ","ADCode", "PurposeCode", "RemittanceCurrency", "UtilizedAmount"].map((key, i) => (
-              <th key={i} className="px-4 py-2">{key}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {[" ","ADCode", "PurposeCode", "RemittanceCurrency", "UtilizedAmount"].map((key, i) => (
-              <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
-            ))}
-          </tr>
-        </tbody>
+                  <tr className="bg-gray-50 text-sm">
+                  <td colSpan={11}>
+                    <table className="w-full border-collapse text-left">
+                      {/* First Row */}
+                      <thead className="bg-gray-100 font-semibold text-black">
+                        <tr>
+                          {['',"adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
+                            <th key={i} className="px-4 py-2">{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          {['',"adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
+                            <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
+                          ))}
+                        </tr>
+                      </tbody>
 
-        <thead className="bg-gray-100 font-semibold text-black">
-          <tr>
-            {[" ","RemitterAddress", "RemitterCountryCode", "RemitterBank", "OtherBankRefNumber"].map((key, i) => (
-              <th key={i} className="px-4 py-2">{key}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {["","RemitterAddress", "RemitterCountryCode", "RemitterBank", "OtherBankRefNumber"].map((key, i) => (
-              <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
-    </td>
-  </tr>
+                      {/* Second Row */}
+                      <thead className="bg-gray-100 font-semibold text-black">
+                        <tr>
+                          {['',"remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
+                            <th key={i} className="px-4 py-2">{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          {['',"remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
+                            <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
 )}
 
               </>

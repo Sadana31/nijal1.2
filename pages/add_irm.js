@@ -46,16 +46,24 @@ export default function AddIRM() {
       return false;
     }
 
-    if (id === 'remittanceCurrency' || countryCodeFields.includes(id)) {
+    if (id === 'remittanceCurrency') {
       if (!/^[A-Z]{3}$/.test(val)) {
         showError(input, 'Enter exactly 3 uppercase letters');
         return false;
       }
-    } else {
-      if (!/^[a-zA-Z0-9.\- ]*$/.test(val)) {
-        showError(input, 'Only letters, numbers, hyphens (-), and dots (.) allowed');
+    }
+
+    if (countryCodeFields.includes(id)) {
+      if (val !== '' && !/^[A-Z]{3}$/.test(val)) {
+        showError(input, 'Enter exactly 3 uppercase letters or leave empty');
         return false;
       }
+    }
+
+    const allowSpaceFields = ['bankName', 'remitterAddress', 'otherBankRef'];
+    if (!allowSpaceFields.includes(id) && /\s/.test(val)) {
+      showError(input, 'No spaces allowed');
+      return false;
     }
 
     if (decimalFields.includes(id)) {
@@ -69,10 +77,10 @@ export default function AddIRM() {
   };
 
   const handleBlur = (e) => validateField(e.target);
-    const handleInputWrapper = (e) => handleInput(e);
-    const handleKeydown = (e) => {
-      if (e.key === 'Enter') e.preventDefault();
-    };
+  const handleInputWrapper = (e) => handleInput(e);
+  const handleKeydown = (e) => {
+    if (e.key === 'Enter') e.preventDefault();
+  };
 
   const handleInput = (e) => {
     const input = e.target;
@@ -108,10 +116,26 @@ export default function AddIRM() {
 
       input.value = val;
       input.setSelectionRange(selectionStart, selectionStart);
+      if (id === 'remittanceAmount' || id === 'utilizedAmount') {
+        autoCalculateOutstanding();
+      }
       return;
     }
 
-    input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '');
+    const allowSpaceFields = ['bankName', 'remitterAddress', 'otherBankRef'];
+    input.value = allowSpaceFields.includes(id)
+      ? input.value.replace(/[^a-zA-Z0-9.\-\s]/g, '')
+      : input.value.replace(/[^a-zA-Z0-9.\-]/g, '');
+  };
+
+  const autoCalculateOutstanding = () => {
+    const form = formRef.current;
+    const rem = parseFloat(form.remittanceAmount?.value || 0);
+    const util = parseFloat(form.utilizedAmount?.value || 0);
+    const outInput = form.outstandingAmount;
+    if (!isNaN(rem) && !isNaN(util)) {
+      outInput.value = (rem - util).toFixed(2);
+    }
   };
 
   useEffect(() => {
@@ -133,7 +157,6 @@ export default function AddIRM() {
     };
   }, []);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -151,7 +174,6 @@ export default function AddIRM() {
     }
 
     setIsSubmitting(true);
-
     const formDataObj = {};
     inputs.forEach((input) => {
       formDataObj[input.name] = input.value.trim();
@@ -183,7 +205,7 @@ export default function AddIRM() {
     ['adCode', 'AD Code*'],
     ['bankName', 'Bank Name*'],
     ['ieCode', 'IE Code*'],
-    ['remittanceRefNo', 'Remittance Reference Number*'],
+    ['RemittanceRefNo', 'Remittance Reference Number*'],
     ['remittanceDate', 'Remittance Date*'],
     ['purposeCode', 'Purpose Code*'],
     ['remittanceCurrency', 'Remittance Currency*'],

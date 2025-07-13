@@ -13,6 +13,16 @@ export default function AddShippingBill() {
   const integerFields = ['shippingBillNo'];
   const countryCodeFields = ['buyerCountryCode', 'consigneeCountryCode', 'fobCurrency'];
 
+  const fieldsAllowingSpaces = new Set([
+    'exportAgency', 'bankName',
+    'buyerName', 'buyerAddress', 'buyerCountryCode',
+    'consigneeName', 'consigneeCountryCode',
+    'originOfGoods', 'portOfDestination',
+    'tenorAsPerInvoice', 'commodityDescription',
+    'shippingCompanyName', 'blAwbNo',
+    'vesselName', 'commercialInvoice', 'tradeTerms'
+  ]);
+
   function showError(input, message) {
     let error = input.nextElementSibling;
     if (!error || !error.classList.contains('error-message')) {
@@ -25,15 +35,6 @@ export default function AddShippingBill() {
     error.textContent = message;
   }
 
-  function handleBlur(e) {
-    validateField(e.target);
-  }
-
-  function handleKeydown(e) {
-    if (e.key === 'Enter') e.preventDefault();
-  }
-
-
   function clearError(input) {
     let error = input.nextElementSibling;
     if (error && error.classList.contains('error-message')) {
@@ -41,12 +42,16 @@ export default function AddShippingBill() {
     }
   }
 
+
+
   function validateField(input) {
     clearError(input);
     const val = input.value.trim();
     const id = input.id;
 
-    if (input.hasAttribute('required') && val === '') {
+    const isOptionalCountry = ['buyerCountryCode', 'consigneeCountryCode'].includes(id);
+
+    if (!isOptionalCountry && input.hasAttribute('required') && val === '') {
       showError(input, 'This field is required');
       return false;
     }
@@ -56,20 +61,25 @@ export default function AddShippingBill() {
       return false;
     }
 
-    // Country Code Special Check
     if (countryCodeFields.includes(id)) {
-      if (!/^[A-Z]{3}$/.test(val)) {
+      if (val && !/^[A-Z]{3}$/.test(val)) {
         showError(input, 'Enter exactly 3 uppercase alphabetic letters');
         return false;
       }
     } else {
-        // Check allowed characters
-        if (!/^[a-zA-Z0-9.\- ]*$/.test(val)) {
-          showError(input, 'Only letters, numbers, hyphens (-), and dots (.) allowed');
-          return false;
-        }
+      const pattern = fieldsAllowingSpaces.has(id)
+        ? /^[a-zA-Z0-9.\- ]*$/
+        : /^[a-zA-Z0-9.\-]*$/;
+      if (!pattern.test(val)) {
+        showError(
+          input,
+          fieldsAllowingSpaces.has(id)
+            ? 'Only letters, numbers, hyphens (-), dots (.), and spaces allowed'
+            : 'No spaces allowed. Only letters, numbers, hyphens (-), and dots (.) allowed'
+        );
+        return false;
       }
-
+    }
 
     switch (id) {
       case 'shippingBillNo':
@@ -94,16 +104,18 @@ export default function AddShippingBill() {
 
       case 'exportBillValue':
       case 'billRealizedValue':
-      case 'billOutstandingValue':
-        if (val === '') {
-          if (input.hasAttribute('required')) {
-            showError(input, 'This field is required');
-            return false;
-          }
-          break;
+        if (val === '' && input.hasAttribute('required')) {
+          showError(input, 'This field is required');
+          return false;
         }
         if (!/^\d{1,18}(\.\d{1,2})?$/.test(val)) {
           showError(input, 'Enter a valid number (up to 18 digits before decimal and 2 decimals)');
+          return false;
+        }
+        const exportVal = parseFloat(document.getElementById('exportBillValue')?.value || '0');
+        const realizedVal = parseFloat(document.getElementById('billRealizedValue')?.value || '0');
+        if (realizedVal !== exportVal) {
+          showError(input, 'Bill Realized must be exactly equal to Export Bill Value');
           return false;
         }
         break;
@@ -116,7 +128,6 @@ export default function AddShippingBill() {
     const input = e.target;
     const id = input.id;
 
-    // Country code fields – uppercase only letters
     if (countryCodeFields.includes(id)) {
       input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
       return;
@@ -133,39 +144,48 @@ export default function AddShippingBill() {
 
     if (['shippingBillDate', 'invoiceDate', 'blDate'].includes(id)) {
       const parts = input.value.split('-');
-      if (parts[0] && parts[0].length > 4) {
+      if (parts[0]?.length > 4) {
         parts[0] = parts[0].slice(0, 4);
         input.value = parts.join('-');
       }
     }
 
     if (decimalFields.includes(id)) {
-      let val = input.value;
-      const selectionStart = input.selectionStart;
-
-      val = val.replace(/[^0-9.]/g, '');
-
+      let val = input.value.replace(/[^0-9.]/g, '');
       const firstDecimal = val.indexOf('.');
       if (firstDecimal !== -1) {
         val = val.slice(0, firstDecimal + 1) + val.slice(firstDecimal + 1).replace(/\./g, '');
       }
-
       const parts = val.split('.');
       parts[0] = parts[0].slice(0, 18);
-      if (parts.length > 1) {
-        parts[1] = parts[1].slice(0, 2);
-        val = parts[0] + '.' + parts[1];
-      } else {
-        val = parts[0];
-      }
+      if (parts.length > 1) parts[1] = parts[1].slice(0, 2);
+      input.value = parts.join('.');
 
-      input.value = val;
-      input.setSelectionRange(selectionStart, selectionStart);
+      if (id === 'billRealizedValue' || id === 'exportBillValue') {
+        const exportVal = parseFloat(document.getElementById('exportBillValue')?.value || '0');
+        const realizedVal = parseFloat(document.getElementById('billRealizedValue')?.value || '0');
+        const outstandingInput = document.getElementById('billOutstandingValue');
+        if (outstandingInput) {
+          const outstanding = (exportVal - realizedVal).toFixed(2);
+          outstandingInput.value = isNaN(outstanding) ? '' : outstanding;
+        }
+      }
       return;
     }
 
-    // For all others: allow only letters, numbers, dot, hyphen
-    input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '');
+    if (!fieldsAllowingSpaces.has(id)) {
+      input.value = input.value.replace(/[^a-zA-Z0-9.\-]/g, '');
+    } else {
+      input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '');
+    }
+  }
+
+  function handleBlur(e) {
+    validateField(e.target);
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Enter') e.preventDefault();
   }
 
   useEffect(() => {
@@ -233,7 +253,6 @@ export default function AddShippingBill() {
     };
   }, [isSubmitting]);
 
-
   const shippingBillFields = [
     ['shippingBillNo', 'Shipping Bill*'],
     ['formNo', 'Form No*'],
@@ -279,9 +298,7 @@ export default function AddShippingBill() {
       <h2 className="text-2xl font-bold mb-6 text-[#08315c]">Add Shipping Bill</h2>
 
       <fieldset className="border border-gray-400 rounded p-6 mb-8">
-        <legend className="font-semibold text-[#08315c] px-2 text-lg">
-          Shipping Bill Basic Details
-        </legend>
+        <legend className="font-semibold text-[#08315c] px-2 text-lg">Shipping Bill Basic Details</legend>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {shippingBillFields.map(([name, label, type = 'text']) => (
             <div key={name}>
@@ -301,9 +318,7 @@ export default function AddShippingBill() {
       </fieldset>
 
       <fieldset className="border border-gray-400 rounded p-6 mb-8">
-        <legend className="font-semibold text-[#08315c] px-2 text-lg">
-          Other Details
-        </legend>
+        <legend className="font-semibold text-[#08315c] px-2 text-lg">Other Details</legend>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {otherFields.map(([name, label, type = 'text']) => (
             <div key={name}>

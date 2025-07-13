@@ -62,6 +62,25 @@
 
       };
 
+      const formatDate = (input) => {
+        if (!input || typeof input !== 'string') return '';
+
+        // If it's already dd-mm-yyyy, return as is
+        if (/^\d{2}-\d{2}-\d{4}$/.test(input)) {
+          return input;
+        }
+
+        // If it's ISO or yyyy-mm-dd, parse and format
+        const date = new Date(input);
+        if (isNaN(date.getTime())) return '';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+      };
+
       const handleSearch = useCallback(() => {
         const searchKey = {
           'Shipping Bill': 'shippingBillNo',
@@ -339,7 +358,7 @@
                     </td>
                     <td className="px-4 py-2">{row.shippingBillNo}</td>
                     <td className="px-4 py-2">{row.formNo}</td>
-                    <td className="px-4 py-2">{row.shippingBillDate}</td>
+                    <td>{formatDate(row.shippingBillDate)}</td>
                     <td className="px-4 py-2">{row.portCode}</td>
                     <td className="px-4 py-2">{row.bankName}</td>
                     <td className="px-4 py-2">{row.invoiceCount}</td>

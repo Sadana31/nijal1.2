@@ -10,8 +10,29 @@ exports.getAllIRM = async (req, res) => {
 };
 
 exports.createIRM = async (req, res) => {
+  console.log("🚀 Received IRM payload:", req.body);
+
   try {
-    const newIRM = new IRM(req.body);
+    const newIRM = new IRM({
+      adCode: req.body.adCode,
+      bankName: req.body.bankName,
+      ieCode: req.body.ieCode,
+      RemittanceRefNo: req.body.RemittanceRefNo,
+      remittanceDate: req.body.remittanceDate,
+      purposeCode: req.body.purposeCode,
+      remittanceCurrency: req.body.remittanceCurrency,
+      remittanceAmount: parseFloat(req.body.remittanceAmount),
+      utilizedAmount: parseFloat(req.body.utilizedAmount),
+      outstandingAmount: parseFloat(req.body.outstandingAmount),
+      remitterName: req.body.remitterName,
+      remitterAddress: req.body.remitterAddress,
+      remitterCountryCode: req.body.remitterCountryCode,
+      remitterBank: req.body.remitterBank,
+      otherBankRef: req.body.otherBankRef,
+      status: req.body.status,
+      remittanceType: req.body.remittanceType
+    });
+
     await newIRM.save();
     res.status(201).json(newIRM);
   } catch (err) {
@@ -21,13 +42,12 @@ exports.createIRM = async (req, res) => {
 
 exports.getIRMById = async (req, res) => {
   try {
-    const irm = await IRM.findById(req.params.id);  // lowercase variable name
+    const irm = await IRM.findById(req.params.id);
     res.status(200).json(irm);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
-
 
 exports.updateIRM = async (req, res) => {
   try {
@@ -46,7 +66,7 @@ exports.createIRMInBulk = async (req, res) => {
   }
 
   const requiredFields = [
-    "remittanceRefNo", "adCode", "bankName", "ieCode", "remittanceDate",
+    "RemittanceRefNo", "adCode", "bankName", "ieCode", "remittanceDate",
     "purposeCode", "remittanceCurrency", "remittanceAmount", "utilizedAmount",
     "outstandingAmount", "remitterName", "remitterAddress", "remitterCountryCode",
     "remitterBank", "otherBankRef", "status", "remittanceType"
@@ -58,24 +78,23 @@ exports.createIRMInBulk = async (req, res) => {
     const row = data[i];
 
     // Check for missing fields
-    const missing = requiredFields.filter(f => !row[f] || row[f].trim() === '');
+    const missing = requiredFields.filter(f => !row[f] || row[f].toString().trim() === '');
     if (missing.length) {
       return res.status(400).json({ message: `Row ${i + 2}: Missing fields - ${missing.join(', ')}` });
     }
 
-    // Validate date format
-    if (!/^\d{2}-\d{2}-\d{4}$/.test(row.remittanceDate)) {
+    // Validate date format (dd-mm-yyyy)
+    if (!/^(\d{2})-(\d{2})-(\d{4})$/.test(row.remittanceDate)) {
       return res.status(400).json({ message: `Row ${i + 2}: Invalid date format (use dd-mm-yyyy)` });
     }
 
-    // Push to valid entries
     validEntries.push({
       SrNo: i + 1,
       adCode: row.adCode,
       bankName: row.bankName,
       ieCode: row.ieCode,
-      remittanceRefNo: row.remittanceRefNo,
-      remittanceDate: row.remittanceDate, // ✅ store as string
+      RemittanceRefNo: row.RemittanceRefNo,
+      remittanceDate: row.remittanceDate,
       purposeCode: row.purposeCode,
       remittanceCurrency: row.remittanceCurrency,
       remittanceAmount: parseFloat(row.remittanceAmount),
@@ -85,7 +104,7 @@ exports.createIRMInBulk = async (req, res) => {
       remitterAddress: row.remitterAddress,
       remitterCountryCode: row.remitterCountryCode,
       remitterBank: row.remitterBank,
-      otherBankRefNo: row.otherBankRef,
+      otherBankRef: row.otherBankRef,
       status: row.status,
       remittanceType: row.remittanceType
     });
