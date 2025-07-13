@@ -39,7 +39,7 @@ export default function IRMPage() {
           }
 
           const selectedIRMNo = [...selectedIRMs][0];
-          const selectedRow = data.find((row) => row.RemittanceRefNo === selectedIRMNo);
+          const selectedRow = data.find((row) => row.remittanceRefNo === selectedIRMNo);
 
           if (!selectedRow) {
             toast.error("Selected IRM not found.");
@@ -58,7 +58,7 @@ export default function IRMPage() {
                 }
       
                 const selectedIRMNo = [...selectedIRMs][0];
-                const selectedRow = data.find((row) => row.RemittanceRefNo === selectedIRMNo);
+                const selectedRow = data.find((row) => row.remittanceRefNo === selectedIRMNo);
       
                 if (!selectedRow) {
                   toast.error("Selected IRM not found.");
@@ -111,7 +111,7 @@ export default function IRMPage() {
       .then((result) => {
         const normalized = result.map(row => ({
           ...row,
-          remittanceRefNo: row.RemittanceRefNo || row.RemittanceRefNo,
+          remittanceRefNo: row.remittanceRefNo || row.remittanceRefNo,
           bankName: row.bankName || row.BankName,
           ieCode: row.ieCode || row.IECode,
           remittanceDate: row.remittanceDate || row.RemittanceDate,
@@ -136,7 +136,7 @@ export default function IRMPage() {
 
   const handleSearch = useCallback(() => {
     const keyMap = {
-      'Remittance Ref No': 'RemittanceRefNo',
+      'Remittance Ref No': 'remittanceRefNo',
       'Bank Name': 'BankName',
       'AD Code': 'ADCode',
       'IE Code': 'IECode'
@@ -212,7 +212,7 @@ export default function IRMPage() {
   const showSelectedDetails = async () => {
     if (selectedIRMs.size !== 1) return toast.error('Select exactly one IRM entry.');
     const id = [...selectedIRMs][0];
-    const details = data.find((row) => row.RemittanceRefNo === id);
+    const details = data.find((row) => row.remittanceRefNo === id);
 
     if (!details) return toast.error('Selected IRM not found');
 
@@ -250,6 +250,7 @@ export default function IRMPage() {
 
 
   const searchOptions = ['Remittance Ref No', 'Bank Name', 'AD Code', 'IE Code'];
+
   const placeholders = {
     'Remittance Ref No': 'e.g. 0002GRS12345678',
     'Bank Name': 'e.g. IRMI',
@@ -258,14 +259,14 @@ export default function IRMPage() {
   };
 
   const sortableHeaders = [
-    { label: 'Remittance Ref No', key: 'RemittanceRefNo' },
-    { label: 'Bank Name', key: 'BankName' },
-    { label: 'IE Code', key: 'IECode' },
-    { label: 'Remittance Date', key: 'RemittanceDate' },
-    { label: 'Remittance Amount', key: 'RemittanceAmount' },
-    { label: 'Outstanding Amount', key: 'OutstandingAmount' },
+    { label: 'Remittance Ref No', key: 'remittanceRefNo' },
+    { label: 'Bank Name', key: 'bankName' },
+    { label: 'IE Code', key: 'ieCode' },
+    { label: 'Remittance Date', key: 'remittanceDate' },
+    { label: 'Remittance Amount', key: 'remittanceAmount' },
+    { label: 'Outstanding Amount', key: 'outstandingAmount' },
     { label: 'Remitter Name', key: 'remitterName' },
-    { label: 'Status', key: 'Status' }
+    { label: 'Status', key: 'status' }
   ];
 
 
@@ -345,12 +346,12 @@ export default function IRMPage() {
                     <input
                       type="radio"
                       name="irmSelection"
-                      checked={selectedIRMs.has(row.RemittanceRefNo)}
+                      checked={selectedIRMs.has(row.remittanceRefNo)}
                       onChange={() => {
-                        const isSelected = selectedIRMs.has(row.RemittanceRefNo);
+                        const isSelected = selectedIRMs.has(row.remittanceRefNo);
                         const newSet = new Set();
                         if (!isSelected) {
-                          newSet.add(row.RemittanceRefNo);
+                          newSet.add(row.remittanceRefNo);
                         }
                         setSelectedIRMs(newSet);
                       }}
@@ -361,7 +362,7 @@ export default function IRMPage() {
                       {expandedRows.includes(row._id) ? '−' : '+'}
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceRefNo}</td>
+                  <td className="px-4 py-2 text-black">{row.remittanceRefNo}</td>
                   <td className="px-4 py-2 text-black">{row.bankName}</td>
                   <td className="px-4 py-2 text-black">{row.ieCode}</td>
                   <td className="px-4 py-2 text-black">{formatDate(row.remittanceDate)}</td>
