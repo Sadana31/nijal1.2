@@ -10,6 +10,7 @@ export default function ModifyIRM() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
+  const today = new Date().toISOString().split('T')[0];
 
   const decimalFields = ['remittanceAmount', 'utilizedAmount', 'outstandingAmount'];
   const countryCodeFields = ['remitterCountryCode'];
@@ -149,6 +150,7 @@ useEffect(() => {
                 formNoValidate
                 maxLength={name === 'remittanceCurrency' ? 3 : 50}
                 value={formData[name] || ''}
+                max={name === 'remittanceCurrency'  ? today : undefined}  
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className={`w-full border border-gray-400 rounded px-3 py-2 ${formData[name] ? 'bg-gray-100' : ''}`}
               />
@@ -168,6 +170,7 @@ useEffect(() => {
                 id={name}
                 name={name}
                 maxLength={50}
+                max={name == 'remittanceDate' ? today : undefined}  
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className={`w-full border border-gray-400 rounded px-3 py-2 ${formData[name] ? 'bg-gray-100' : ''}`}

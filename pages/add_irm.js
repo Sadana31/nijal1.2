@@ -23,7 +23,7 @@ export default function AddIRM() {
       input.after(error);
     }
     error.textContent = message;
-    input.style.borderColor = 'red'; // 🔴 highlight border
+    input.style.borderColor = 'red'; 
   };
 
   const clearError = (input) => {
@@ -267,8 +267,8 @@ export default function AddIRM() {
                 id={name}
                 name={name}
                 required
+                max={name === 'remittanceDate' ? today : undefined}  
                 maxLength={name === 'remittanceCurrency' ? 3 : 50}
-                min={name === 'remittanceDate' ? today : undefined}  // 🔹 Block older dates
                 className="w-full border border-gray-400 rounded px-3 py-2"
               />
             </div>

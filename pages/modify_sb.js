@@ -10,6 +10,7 @@ export default function ModifyShippingBill() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
+  const today = new Date().toISOString().split('T')[0];
 
   const decimalFields = ['exportBillValue', 'billRealizedValue', 'billOutstandingValue'];
   const integerFields = ['shippingBillNo'];
@@ -162,6 +163,11 @@ export default function ModifyShippingBill() {
       return false;
     }
 
+    if (id === 'shippingBillDate' && date > today) {
+      showError(input, 'Shipping Bill Date cannot be in the future');
+      return false;
+    }
+
     if (["shippingBillDate", "invoiceDate", "blDate"].includes(id)) {
       if (val) {
         const date = new Date(val);
@@ -248,6 +254,7 @@ export default function ModifyShippingBill() {
                 name={name}
                 maxLength={50}
                 value={formData[name] || ''}
+                max={type === 'date' ? today : undefined}  
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className={
                   formData[name]
@@ -289,6 +296,7 @@ export default function ModifyShippingBill() {
                 maxLength={50}
                 formNoValidate
                 value={formData[name] || ''}
+                max={type === 'date' ? today : undefined}  
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
                 className={
                   formData[name]

@@ -19,6 +19,10 @@ export default function MappingPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedIRM, setSelectedIRM] = useState(null);
   const [showIRMDetails, setShowIRMDetails] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(10); // you can change number of rows per page
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
 
   useEffect(() => {
     const storedIRM = sessionStorage.getItem("selectedRow");
@@ -253,6 +257,8 @@ const handleSubmitMappingIRMToSB = async () => {
 };
 
   const visibleRows = mode === 'irmToSb' ? sbData : irmData;
+  const currentRows = visibleRows.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
 
   return (
     <div className="p-6 text-[13px] text-black">
@@ -356,7 +362,7 @@ const handleSubmitMappingIRMToSB = async () => {
             </tr>
           </thead>
           <tbody>
-            {sbData.map((sb, i) => (
+            {currentRows.map((sb, i) => (
   <React.Fragment key={i}>
     <tr className="border-b">
       <td className="px-3 py-2 text-black">
@@ -449,6 +455,38 @@ const handleSubmitMappingIRMToSB = async () => {
         </table>
       </div>
     )}
+
+    <div className="flex justify-end mt-2 items-center gap-2">
+      <button
+        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+        disabled={currentPage === 1}
+        className={`px-3 py-1 border rounded ${currentPage === 1 ? 'bg-gray-200 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+      >
+        Prev
+      </button>
+
+      {/* Page numbers */}
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+        <button
+          key={num}
+          onClick={() => setCurrentPage(num)}
+          className={`px-3 py-1 border rounded ${currentPage === num ? 'border-black font-bold' : 'bg-white hover:bg-gray-100'}`}
+        >
+          {num}
+        </button>
+      ))}
+
+      <button
+        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+        disabled={currentPage === totalPages}
+        className={`px-3 py-1 border rounded ${currentPage === totalPages ? 'bg-gray-200 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+      >
+        Next
+      </button>
+    </div>
+
+
+
 <div className="mt-4">
         <button
           onClick={handleSubmitMappingIRMToSB}
@@ -580,7 +618,7 @@ const handleSubmitMappingIRMToSB = async () => {
             </tr>
           </thead>
           <tbody>
-            {irmData.map((row) => (
+            {currentRows.map((row) => (
               <React.Fragment key={row._id}>
                 <tr className="border-b">
                   <td className="px-2 py-2">
@@ -663,6 +701,37 @@ const handleSubmitMappingIRMToSB = async () => {
           </tbody>
         </table>
       </div>
+
+      <div className="flex justify-end mt-2 items-center gap-2">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className={`px-3 py-1 border rounded ${currentPage === 1 ? 'bg-gray-200 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+        >
+          Prev
+        </button>
+
+        {/* Page numbers */}
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+          <button
+            key={num}
+            onClick={() => setCurrentPage(num)}
+            className={`px-3 py-1 border rounded ${currentPage === num ? 'border-black font-bold' : 'bg-white hover:bg-gray-100'}`}
+          >
+            {num}
+          </button>
+        ))}
+
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-1 border rounded ${currentPage === totalPages ? 'bg-gray-200 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+        >
+          Next
+        </button>
+      </div>
+
+
 
       <div className="mt-4">
         <button
