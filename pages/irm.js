@@ -112,21 +112,21 @@ export default function IRMPage() {
         const normalized = result.map(row => ({
           ...row,
           RemittanceRefNo: row.RemittanceRefNo || row.RemittanceRefNo,
-          bankName: row.bankName || row.BankName,
-          ieCode: row.ieCode || row.IECode,
-          remittanceDate: row.remittanceDate || row.RemittanceDate,
-          remittanceAmount: row.remittanceAmount || row.RemittanceAmount,
-          outstandingAmount: row.outstandingAmount || row.OutstandingAmount,
-          remitterName: row.remitterName || row.RemitterName,
+          bankName: row.bankName || row.bankName,
+          ieCode: row.ieCode || row.ieCode,
+          remittanceDate: row.remittanceDate || row.remittanceDate,
+          remittanceAmount: row.remittanceAmount || row.remittanceAmount,
+          outstandingAmount: row.outstandingAmount || row.outstandingAmount,
+          remitterName: row.remitterName || row.remitterName,
           status: row.status || row.Status,
-          adCode: row.adCode || row.ADCode,
-          purposeCode: row.purposeCode || row.PurposeCode,
-          remittanceCurrency: row.remittanceCurrency || row.RemittanceCurrency,
-          utilizedAmount: row.utilizedAmount || row.UtilizedAmount,
-          remitterAddress: row.remitterAddress || row.RemitterAddress,
-          remitterCountryCode: row.remitterCountryCode || row.RemitterCountryCode,
-          remitterBank: row.remitterBank || row.RemitterBank,
-          otherBankRefNumber: row.otherBankRefNumber || row.OtherBankRefNumber,
+          adCode: row.adCode || row.adCode,
+          purposeCode: row.purposeCode || row.purposeCode,
+          remittanceCurrency: row.remittanceCurrency || row.remittanceCurrency,
+          utilizedAmount: row.utilizedAmount || row.utilizedAmount,
+          remitterAddress: row.remitterAddress || row.remitterAddress,
+          remitterCountryCode: row.remitterCountryCode || row.remitterCountryCode,
+          remitterBank: row.remitterBank || row.remitterBank,
+          otherBankRefNumber: row.otherBankRefNumber || row.otherBankRefNumber,
         }));
         setData(normalized);
         setFilteredData(normalized);
@@ -137,9 +137,9 @@ export default function IRMPage() {
   const handleSearch = useCallback(() => {
     const keyMap = {
       'Remittance Ref No': 'RemittanceRefNo',
-      'Bank Name': 'BankName',
-      'AD Code': 'ADCode',
-      'IE Code': 'IECode'
+      'Bank Name': 'bankName',
+      'AD Code': 'adCode',
+      'IE Code': 'ieCode'
     };
     const key = keyMap[searchField];
     const filtered = data.filter((row) =>
@@ -341,7 +341,14 @@ export default function IRMPage() {
           <tbody>
             {visibleRows.map((row) => (
               <>
-                <tr key={row._id} className="border-b">
+                <tr
+                  key={row._id}
+                  className="border-b cursor-pointer hover:bg-gray-50"
+                  onDoubleClick={() => {
+                    setModalData(row);     // set the clicked row’s data
+                    setModalVisible(true); // open modal
+                  }}
+                >
                   <td className="px-2 py-2">
                     <input
                       type="radio"

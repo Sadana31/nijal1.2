@@ -36,12 +36,12 @@ exports.mapIRMsToSB = async (req, res) => {
       });
     }
 
-    // Update each IRM's UtilizedAmount
+    // Update each IRM's utilizedAmount
     await Promise.all(selectedIRMData.map(async irm => {
       const ref = irm.RemittanceRefNumber || irm.remittanceRefNumber;
       await IRM.findOneAndUpdate(
         { RemittanceRefNumber: ref },
-        { $set: { UtilizedAmount: irm.irmUtilizationAmount } },
+        { $set: { utilizedAmount: irm.irmUtilizationAmount } },
         { new: true }
       );
     }));
@@ -124,11 +124,11 @@ exports.mapSBsToIRM = async (req, res) => {
     if (!irm) return res.status(404).json({ message: 'IRM not found' });
 
     const irmOutstanding = parseFloat(
-      (irm.OutstandingAmount || '0').toString().replace(/,/g, '')
+      (irm.outstandingAmount || '0').toString().replace(/,/g, '')
     );
 
     if (isNaN(irmOutstanding)) {
-      return res.status(400).json({ message: 'IRM missing OutstandingAmount' });
+      return res.status(400).json({ message: 'IRM missing outstandingAmount' });
     }
 
     const totalUtilized = utilization.reduce(
@@ -142,12 +142,12 @@ exports.mapSBsToIRM = async (req, res) => {
       });
     }
 
-    // Update each SB's UtilizedAmount and fetch full details
+    // Update each SB's utilizedAmount and fetch full details
     const updatedSBs = await Promise.all(
       utilization.map(async ({ shippingBillNo, amount }) => {
         const sb = await ShippingBill.findOneAndUpdate(
           { shippingBillNo },
-          { $set: { UtilizedAmount: parseFloat(amount) } },
+          { $set: { utilizedAmount: parseFloat(amount) } },
           { new: true }
         );
         if (!sb) return null;

@@ -26,23 +26,23 @@ export default function MappingPage() {
       const rawIRM = JSON.parse(storedIRM);
       const normalizedIRM = {
         ...rawIRM,
-        RemittanceRefNumber: rawIRM.RemittanceRefNumber || rawIRM.remittanceRefNo,
-        BankName: rawIRM.BankName || rawIRM.bankName,
-        IECode: rawIRM.IECode || rawIRM.ieCode,
-        RemittanceDate: rawIRM.RemittanceDate || rawIRM.remittanceDate,
-        PurposeCode: rawIRM.PurposeCode || rawIRM.purposeCode,
-        RemittanceCurrency: rawIRM.RemittanceCurrency || rawIRM.remittanceCurrency,
-        RemittanceAmount: rawIRM.RemittanceAmount || rawIRM.remittanceAmount,
-        OutstandingAmount: rawIRM.OutstandingAmount || rawIRM.outstandingAmount,
-        RemitterName: rawIRM.RemitterName || rawIRM.remitterName,
-        RemitterAddress: rawIRM.RemitterAddress || rawIRM.remitterAddress,
-        RemitterCountryCode: rawIRM.RemitterCountryCode || rawIRM.remitterCountryCode,
-        RemitterBank: rawIRM.RemitterBank || rawIRM.remitterBank,
-        OtherBankRefNumber: rawIRM.OtherBankRefNumber || rawIRM.otherBankRef,
+        RemittanceRefNumber: rawIRM.RemittanceRefNumber || rawIRM.RemittanceRefNo,
+        bankName: rawIRM.bankName || rawIRM.bankName,
+        ieCode: rawIRM.ieCode || rawIRM.ieCode,
+        remittanceDate: rawIRM.remittanceDate || rawIRM.remittanceDate,
+        purposeCode: rawIRM.purposeCode || rawIRM.purposeCode,
+        remittanceCurrency: rawIRM.remittanceCurrency || rawIRM.remittanceCurrency,
+        remittanceAmount: rawIRM.remittanceAmount || rawIRM.remittanceAmount,
+        outstandingAmount: rawIRM.outstandingAmount || rawIRM.outstandingAmount,
+        remitterName: rawIRM.remitterName || rawIRM.remitterName,
+        remitterAddress: rawIRM.remitterAddress || rawIRM.remitterAddress,
+        remitterCountryCode: rawIRM.remitterCountryCode || rawIRM.remitterCountryCode,
+        remitterBank: rawIRM.remitterBank || rawIRM.remitterBank,
+        otherBankRefNumber: rawIRM.otherBankRefNumber || rawIRM.otherBankRef,
         Status: rawIRM.Status || rawIRM.status,
-        RemittanceType: rawIRM.RemittanceType || rawIRM.remittanceType,
-        UtilizedAmount: rawIRM.UtilizedAmount || rawIRM.utilizedAmount,
-        ADCode: rawIRM.ADCode || rawIRM.adCode,
+        remittanceType: rawIRM.remittanceType || rawIRM.remittanceType,
+        utilizedAmount: rawIRM.utilizedAmount || rawIRM.utilizedAmount,
+        adCode: rawIRM.adCode || rawIRM.adCode,
       };
       setSelectedIRM(normalizedIRM);
     }
@@ -64,28 +64,28 @@ export default function MappingPage() {
         const normalized = data.map(row => ({
           ...row,
           shippingBillNo: row.shippingBillNo || row.ShippingBill,
-          formNo: row.formNo || row.FormNo,
-          shippingBillDate: row.shippingBillDate || row.ShippingBillDate,
-          portCode: row.portCode || row.PortCode,
-          bankName: row.bankName || row.BankName,
+          formNo: row.formNo || row.formNo,
+          shippingBillDate: row.shippingBillDate || row.shippingBillDate,
+          portCode: row.portCode || row.portCode,
+          bankName: row.bankName || row.bankName,
           invoiceCount: row.invoiceCount || row.InvoiceCount,
-          fobCurrency: row.fobCurrency || row.FOBCurrency,
-          exportBillValue: row.exportBillValue || row.ExportBillValue,
-          billOutstandingValue: row.billOutstandingValue || row.BillOutstandingValue,
-          buyerName: row.buyerName || row.BuyerName,
-          buyerCountryCode: row.buyerCountryCode || row.BuyerCountryCode,
-          ieCode: row.ieCode || row.IECode,
-          invoiceDate: row.invoiceDate || row.InvoiceDate,
+          fobCurrency: row.fobCurrency || row.fobCurrency,
+          exportBillValue: row.exportBillValue || row.exportBillValue,
+          billOutstandingValue: row.billOutstandingValue || row.billOutstandingValue,
+          buyerName: row.buyerName || row.buyerName,
+          buyerCountryCode: row.buyerCountryCode || row.buyerCountryCode,
+          ieCode: row.ieCode || row.ieCode,
+          invoiceDate: row.invoiceDate || row.invoiceDate,
           realizedValue: row.realizedValue || row.RealizedValue,
-          buyerAddress: row.buyerAddress || row.BuyerAddress,
-          consigneeCountryCode: row.consigneeCountryCode || row.ConsigneeCountryCode,
-          portOfDestination: row.portOfDestination || row.PortOfDestination,
-          shippingCompany: row.shippingCompany || row.ShippingCompany,
-          vesselName: row.vesselName || row.VesselName,
-          blDate: row.blDate || row.BLDate,
-          commercialInvoice: row.commercialInvoice || row.CommercialInvoice,
+          buyerAddress: row.buyerAddress || row.buyerAddress,
+          consigneeCountryCode: row.consigneeCountryCode || row.consigneeCountryCode,
+          portOfDestination: row.portOfDestination || row.portOfDestination,
+          shippingCompany: row.shippingCompany || row.shippingCompany,
+          vesselName: row.vesselName || row.vesselName,
+          blDate: row.blDate || row.blDate,
+          commercialInvoice: row.commercialInvoice || row.commercialInvoice,
           tradeTerms: row.tradeTerms || row.TradeTerms,
-          commodity: row.commodity || row.Commodity
+          commodity: row.commodity || row.commodity
         }));
         setSbData(normalized);
       })
@@ -96,23 +96,23 @@ export default function MappingPage() {
       .then(data => {
         const normalized = data.map(row => ({
           ...row,
-          RemittanceRefNumber: row.RemittanceRefNumber || row.remittanceRefNo,
-          BankName: row.BankName || row.bankName,
-          IECode: row.IECode || row.ieCode,
-          RemittanceDate: row.RemittanceDate || row.remittanceDate,
-          PurposeCode: row.PurposeCode || row.purposeCode,
-          RemittanceCurrency: row.RemittanceCurrency || row.remittanceCurrency,
-          RemittanceAmount: row.RemittanceAmount || row.remittanceAmount,
-          OutstandingAmount: row.OutstandingAmount || row.outstandingAmount,
-          RemitterName: row.RemitterName || row.remitterName,
-          RemitterAddress: row.RemitterAddress || row.remitterAddress,
-          RemitterCountryCode: row.RemitterCountryCode || row.remitterCountryCode,
-          RemitterBank: row.RemitterBank || row.remitterBank,
-          OtherBankRefNumber: row.OtherBankRefNumber || row.otherBankRef,
+          RemittanceRefNumber: row.RemittanceRefNumber || row.RemittanceRefNo,
+          bankName: row.bankName || row.bankName,
+          ieCode: row.ieCode || row.ieCode,
+          remittanceDate: row.remittanceDate || row.remittanceDate,
+          purposeCode: row.purposeCode || row.purposeCode,
+          remittanceCurrency: row.remittanceCurrency || row.remittanceCurrency,
+          remittanceAmount: row.remittanceAmount || row.remittanceAmount,
+          outstandingAmount: row.outstandingAmount || row.outstandingAmount,
+          remitterName: row.remitterName || row.remitterName,
+          remitterAddress: row.remitterAddress || row.remitterAddress,
+          remitterCountryCode: row.remitterCountryCode || row.remitterCountryCode,
+          remitterBank: row.remitterBank || row.remitterBank,
+          otherBankRefNumber: row.otherBankRefNumber || row.otherBankRef,
           Status: row.Status || row.status,
-          RemittanceType: row.RemittanceType || row.remittanceType,
-          UtilizedAmount: row.UtilizedAmount || row.utilizedAmount,
-          ADCode: row.ADCode || row.adCode,
+          remittanceType: row.remittanceType || row.remittanceType,
+          utilizedAmount: row.utilizedAmount || row.utilizedAmount,
+          adCode: row.adCode || row.adCode,
         }));
         setIrmData(normalized);
       })
@@ -146,8 +146,8 @@ const handleSubmitMappingIRMToSB = async () => {
     (sum, sbNo) => sum + parseFloat(utilization[sbNo] || 0), 0
   );
 
-  const irmOutstanding = parseFloat(selectedIRM?.OutstandingAmount) || 0;
-  console.log("selectedIRM?.OutstandingAmount =", selectedIRM?.OutstandingAmount);
+  const irmOutstanding = parseFloat(selectedIRM?.outstandingAmount) || 0;
+  console.log("selectedIRM?.outstandingAmount =", selectedIRM?.outstandingAmount);
 
 
 
@@ -214,15 +214,15 @@ const handleSubmitMappingIRMToSB = async () => {
 
         return {
           remittanceRefNumber: irm.RemittanceRefNumber,
-          adCode: irm.ADCode,
-          bankName: irm.BankName,
-          ieCode: irm.IECode,
-          remittanceDate: irm.RemittanceDate,
-          purposeCode: irm.PurposeCode,
-          remittanceCurrency: irm.RemittanceCurrency,
-          remittanceAmount: irm.RemittanceAmount,
-          utilizedAmount: irm.UtilizedAmount,
-          outstandingAmount: irm.OutstandingAmount,
+          adCode: irm.adCode,
+          bankName: irm.bankName,
+          ieCode: irm.ieCode,
+          remittanceDate: irm.remittanceDate,
+          purposeCode: irm.purposeCode,
+          remittanceCurrency: irm.remittanceCurrency,
+          remittanceAmount: irm.remittanceAmount,
+          utilizedAmount: irm.utilizedAmount,
+          outstandingAmount: irm.outstandingAmount,
           irmUtilizationAmount: amt
         };
       })
@@ -284,12 +284,12 @@ const handleSubmitMappingIRMToSB = async () => {
                 </button>
               </td>
               <td className="px-3 py-2">{selectedIRM.RemittanceRefNumber}</td>
-              <td className="px-3 py-2">{selectedIRM.BankName}</td>
-              <td className="px-3 py-2">{selectedIRM.IECode}</td>
-              <td className="px-3 py-2">{selectedIRM.RemittanceDate}</td>
-              <td className="px-3 py-2">{selectedIRM.RemittanceAmount}</td>
-              <td className="px-3 py-2">{selectedIRM.OutstandingAmount}</td>
-              <td className="px-3 py-2">{selectedIRM.RemitterName}</td>
+              <td className="px-3 py-2">{selectedIRM.bankName}</td>
+              <td className="px-3 py-2">{selectedIRM.ieCode}</td>
+              <td className="px-3 py-2">{selectedIRM.remittanceDate}</td>
+              <td className="px-3 py-2">{selectedIRM.remittanceAmount}</td>
+              <td className="px-3 py-2">{selectedIRM.outstandingAmount}</td>
+              <td className="px-3 py-2">{selectedIRM.remitterName}</td>
               <td className="px-3 py-2">{selectedIRM.Status}</td>
             </tr>
             {showIRMDetails && (
@@ -298,28 +298,28 @@ const handleSubmitMappingIRMToSB = async () => {
                   <table className="w-full border-collapse text-left">
                     <thead className="bg-gray-100 font-semibold text-black">
                       <tr>
-                        {["ADCode", "PurposeCode", "RemittanceCurrency", "UtilizedAmount"].map((key, i) => (
+                        {["adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
                           <th key={i} className="px-4 py-2">{key}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        {["ADCode", "PurposeCode", "RemittanceCurrency", "UtilizedAmount"].map((key, i) => (
+                        {["adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
                           <td key={i} className="px-4 py-2 text-black">{selectedIRM[key] || '-'}</td>
                         ))}
                       </tr>
                     </tbody>
                     <thead className="bg-gray-100 font-semibold text-black">
                       <tr>
-                        {["RemitterAddress", "RemitterCountryCode", "RemitterBank", "OtherBankRefNumber"].map((key, i) => (
+                        {["remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
                           <th key={i} className="px-4 py-2">{key}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        {["RemitterAddress", "RemitterCountryCode", "RemitterBank", "OtherBankRefNumber"].map((key, i) => (
+                        {["remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
                           <td key={i} className="px-4 py-2 text-black">{selectedIRM[key] || '-'}</td>
                         ))}
                       </tr>
@@ -411,7 +411,7 @@ const handleSubmitMappingIRMToSB = async () => {
           <table className="w-full border-collapse text-left">
             <thead className="bg-gray-100 font-semibold text-black">
               <tr>
-                {["","IECode", "InvoiceDate", "RealizedValue", "BuyerAddress", "ConsigneeCountryCode"].map((key, i) => (
+                {["","ieCode", "invoiceDate", "RealizedValue", "buyerAddress", "consigneeCountryCode"].map((key, i) => (
                   <th key={i} className="px-4 py-2">{key}</th>
                 ))}
               </tr>
@@ -426,7 +426,7 @@ const handleSubmitMappingIRMToSB = async () => {
 
             <thead className="bg-gray-100 font-semibold text-black">
               <tr>
-                {["","PortOfDestination", "ShippingCompany", "VesselName", "BLDate", "TradeTerms", "Commodity"].map((key, i) => (
+                {["","portOfDestination", "shippingCompany", "vesselName", "blDate", "TradeTerms", "commodity"].map((key, i) => (
                   <th key={i} className="px-4 py-2">{key}</th>
                 ))}
               </tr>
@@ -546,7 +546,7 @@ const handleSubmitMappingIRMToSB = async () => {
                           <td className="px-4 py-2">BL Date</td>
                           <td className="px-4 py-2">Commercial Invoice</td>
                           <td className="px-4 py-2">Trade Terms</td>
-                          <td className="px-4 py-2">Commodity</td>
+                          <td className="px-4 py-2">commodity</td>
                         </tr>
                         <tr>
                           <td className="py-2"> </td>
@@ -573,7 +573,7 @@ const handleSubmitMappingIRMToSB = async () => {
             <tr className="bg-[#7bbbc2] font-semibold">
               <th className="px-2 py-3 w-4"><input type="checkbox" /></th>
               <th className="px-2 py-3 w-4 text-black"></th>
-              {["RemittanceRefNumber", "BankName", "IECode", "RemittanceDate", "RemittanceAmount", "OutstandingAmount", "RemitterName", "Status"].map((head, i) => (
+              {["RemittanceRefNumber", "bankName", "ieCode", "remittanceDate", "remittanceAmount", "outstandingAmount", "remitterName", "Status"].map((head, i) => (
                 <th key={i} className="px-4 py-3 text-left text-black">{head}</th>
               ))}
               <th className="px-4 py-3 text-left text-black">Utilization Amount</th>
@@ -601,12 +601,12 @@ const handleSubmitMappingIRMToSB = async () => {
                     </button>
                   </td>
                   <td className="px-4 py-2 text-black">{row.RemittanceRefNumber}</td>
-                  <td className="px-4 py-2 text-black">{row.BankName}</td>
-                  <td className="px-4 py-2 text-black">{row.IECode}</td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceDate}</td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceAmount}</td>
-                  <td className="px-4 py-2 text-black">{row.OutstandingAmount}</td>
-                  <td className="px-4 py-2 text-black">{row.RemitterName}</td>
+                  <td className="px-4 py-2 text-black">{row.bankName}</td>
+                  <td className="px-4 py-2 text-black">{row.ieCode}</td>
+                  <td className="px-4 py-2 text-black">{row.remittanceDate}</td>
+                  <td className="px-4 py-2 text-black">{row.remittanceAmount}</td>
+                  <td className="px-4 py-2 text-black">{row.outstandingAmount}</td>
+                  <td className="px-4 py-2 text-black">{row.remitterName}</td>
                   <td className="px-4 py-2 text-black">{row.Status}</td>
                   <td className="px-4 py-2 text-black">
                     <input
@@ -627,14 +627,14 @@ const handleSubmitMappingIRMToSB = async () => {
                       <table className="w-full border-collapse text-left">
                         <thead className="bg-gray-100 font-semibold text-black">
                           <tr>
-                            {[" ", "ADCode", "PurposeCode", "RemittanceCurrency", "UtilizedAmount"].map((key, i) => (
+                            {[" ", "adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
                               <th key={i} className="px-4 py-2">{key}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           <tr>
-                            {[" ", "ADCode", "PurposeCode", "RemittanceCurrency", "UtilizedAmount"].map((key, i) => (
+                            {[" ", "adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
                               <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
                             ))}
                           </tr>
@@ -642,14 +642,14 @@ const handleSubmitMappingIRMToSB = async () => {
 
                         <thead className="bg-gray-100 font-semibold text-black">
                           <tr>
-                            {[" ", "RemitterAddress", "RemitterCountryCode", "RemitterBank", "OtherBankRefNumber"].map((key, i) => (
+                            {[" ", "remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
                               <th key={i} className="px-4 py-2">{key}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           <tr>
-                            {[" ", "RemitterAddress", "RemitterCountryCode", "RemitterBank", "OtherBankRefNumber"].map((key, i) => (
+                            {[" ", "remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
                               <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
                             ))}
                           </tr>

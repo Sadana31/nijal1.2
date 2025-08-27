@@ -52,47 +52,21 @@ function handleInput(e) {
 }
 
 
-  useEffect(() => {
-    const form = formRef.current;
-    const inputs = form.querySelectorAll('input');
 
-    function handleSubmit(e) {
-      e.preventDefault();
-      (async () => {
-        try {
-          const response = await fetch(`https://nijal-backend.onrender.com/api/irm/update/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-          });
-
-          if (response.ok) {
-            toast.success('IRM entry updated!', { duration: 1500 });
-            setTimeout(() => router.push('/irm'), 1500);
-          } else {
-            const err = await response.json();
-            toast.error(err.message || 'Update failed');
-          }
-        } catch (error) {
-          toast.error('Network error while updating.');
-          console.error(error);
-        }
-      })();
-    }
-
-    inputs.forEach((input) => {
-      input.addEventListener('input', handleInput);
-    });
-    form.addEventListener('submit', handleSubmit);
-
-    return () => {
-      inputs.forEach((input) => {
-        input.removeEventListener('input', handleInput);
-      });
-      form.removeEventListener('submit', handleSubmit);
-    };
-  }, [formData, id, router]);
-
+useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const response = await fetch(`https://nijal-backend.onrender.com/api/irm/${id}`);
+        if (!response.ok) throw new Error("Failed to fetch IRM");
+        const data = await response.json();
+        setFormData(data);
+      } catch (err) {
+        toast.error("Could not load IRM details");
+        console.error(err);
+      }
+    })();
+  }, [id]);
 
   useEffect(() => {
     const form = formRef.current;
@@ -203,12 +177,25 @@ function handleInput(e) {
         </div>
       </fieldset>
 
-      <button
-        type="submit"
-        className="bg-[#08315c] text-white font-semibold px-8 py-3 rounded hover:bg-[#061f38] text-lg"
-      >
-        Update
-      </button>
+     <div className="flex gap-4 mt-6">
+        <button
+          type="submit"
+          className="bg-[#08315c] text-white font-semibold px-8 py-3 rounded hover:bg-[#061f38] text-lg"
+        >
+          Update
+        </button>
+
+        <button
+          type="button"
+          className="bg-gray-400 text-white font-semibold px-8 py-3 rounded hover:bg-gray-600 text-lg"
+          onClick={() => router.push('/irm')} 
+        >
+          Cancel
+        </button>
+      </div>
+
+
+
     </form>
   );
 }

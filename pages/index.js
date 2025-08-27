@@ -343,7 +343,14 @@
             <tbody className="text-gray-800">
               {visibleRows.map((row) => (
                 <>
-                  <tr key={row._id} className="border-b">
+                  <tr
+                    key={row._id}
+                    className="border-b cursor-pointer hover:bg-gray-50"
+                    onDoubleClick={() => {
+                      setModalData(row);     // set the clicked row’s data
+                      setModalVisible(true); // open modal
+                    }}
+                  >
                     <td className="px-3 py-2"><input
                       type="radio"
                       name="sbSelection"
@@ -398,7 +405,7 @@
                               <td className="px-4 py-2">BL Date</td>
                               <td className="px-4 py-2">Commercial Invoice</td>
                               <td className="px-4 py-2">Trade Terms</td>
-                              <td className="px-4 py-2">Commodity</td>
+                              <td className="px-4 py-2">commodity</td>
                             </tr>
                             <tr>
                               <td className="py-2">         </td>
@@ -524,7 +531,7 @@
           ['Shipping Company', modalData.shippingCompany],
           ['Vessel Name', modalData.vesselName],
           ['BL Date', modalData.blDate],
-          ['Commodity', modalData.commodity],
+          ['commodity', modalData.commodity],
         ].map(([label, value], idx) => (
           <div key={idx}>
             <div className="font-semibold text-[#1f2937]">{label}</div>
@@ -555,15 +562,15 @@
           mappingHistory.map((entry, idx) =>
             entry.mappedIRMs.map((irm, i) => (
               <tr key={`${idx}-${i}`} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-2">{irm.BankName}</td>
+                <td className="px-4 py-2">{irm.bankName}</td>
                 <td className="px-4 py-2">{irm.RemittanceRefNumber}</td>
-                <td className="px-4 py-2">{irm.RemittanceDate}</td>
-                <td className="px-4 py-2">{irm.PurposeCode}</td>
-                <td className="px-4 py-2">{irm.RemittanceCurrency}</td>
-                <td className="px-4 py-2">{irm.RemittanceAmount}</td>
-                <td className="px-4 py-2">{irm.OutstandingAmount}</td>
-                <td className="px-4 py-2">{irm.RemitterName}</td>
-                <td className="px-4 py-2">{irm.irmUtilizationAmount || irm.UtilizedAmount || '-'}</td>
+                <td className="px-4 py-2">{irm.remittanceDate}</td>
+                <td className="px-4 py-2">{irm.purposeCode}</td>
+                <td className="px-4 py-2">{irm.remittanceCurrency}</td>
+                <td className="px-4 py-2">{irm.remittanceAmount}</td>
+                <td className="px-4 py-2">{irm.outstandingAmount}</td>
+                <td className="px-4 py-2">{irm.remitterName}</td>
+                <td className="px-4 py-2">{irm.irmUtilizationAmount || irm.utilizedAmount || '-'}</td>
               </tr>
             ))
           )

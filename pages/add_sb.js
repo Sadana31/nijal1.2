@@ -12,6 +12,7 @@ export default function AddShippingBill() {
   const decimalFields = ['exportBillValue', 'billRealizedValue', 'billOutstandingValue'];
   const integerFields = ['shippingBillNo'];
   const countryCodeFields = ['buyerCountryCode', 'consigneeCountryCode', 'fobCurrency'];
+  const today = new Date().toISOString().split('T')[0];
 
   const fieldsAllowingSpaces = new Set([
     'exportAgency', 'bankName',
@@ -33,6 +34,7 @@ export default function AddShippingBill() {
       input.after(error);
     }
     error.textContent = message;
+    input.style.borderColor = 'red'; // 🔴 highlight input
   }
 
   function clearError(input) {
@@ -40,8 +42,8 @@ export default function AddShippingBill() {
     if (error && error.classList.contains('error-message')) {
       error.textContent = '';
     }
+    input.style.borderColor = ''; // reset back to default
   }
-
 
 
   function validateField(input) {
@@ -89,14 +91,35 @@ export default function AddShippingBill() {
         }
         break;
 
+      case 'portCode':
+        if (val.length !== 6) {
+          showError(input, 'Port Code must be exactly 6 characters');
+          return false;
+        }
+        break;
+
+      case 'ieCode':
+        if (val.length !== 10) {
+          showError(input, 'IE Code must be exactly 10 characters');
+          return false;
+        }
+        break;
+
       case 'shippingBillDate':
       case 'invoiceDate':
       case 'blDate':
         if (val) {
           const date = new Date(val);
           const year = date.getFullYear();
+          const today = new Date();
+          today.setHours(0,0,0,0);
+
           if (isNaN(date.getTime()) || year < 1000 || year > 9999) {
             showError(input, 'Enter a valid date with 4-digit year');
+            return false;
+          }
+          if (id === 'shippingBillDate' && date > today) {
+            showError(input, 'Shipping Bill Date cannot be in the future');
             return false;
           }
         }
@@ -118,11 +141,19 @@ export default function AddShippingBill() {
           showError(input, 'Bill Realized must be exactly equal to Export Bill Value');
           return false;
         }
+
+        // check outstanding ≤ export bill
+        const outstandingVal = parseFloat(document.getElementById('billOutstandingValue')?.value || '0');
+        if (outstandingVal > exportVal) {
+          showError(document.getElementById('billOutstandingValue'), 'Outstanding cannot exceed Export Bill Value');
+          return false;
+        }
         break;
     }
 
     return true;
   }
+
 
   function handleInput(e) {
     const input = e.target;
@@ -178,6 +209,17 @@ export default function AddShippingBill() {
     } else {
       input.value = input.value.replace(/[^a-zA-Z0-9.\- ]/g, '');
     }
+
+    if (id === 'ieCode') {
+      input.value = input.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10); 
+      return;
+    }
+
+    if (id === 'portCode') {
+      input.value = input.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6); 
+      return;
+    }
+
   }
 
   function handleBlur(e) {
@@ -279,7 +321,7 @@ export default function AddShippingBill() {
     ['originOfGoods', 'Origin of Goods'],
     ['portOfDestination', 'Port of Destination'],
     ['tenorAsPerInvoice', 'Tenor as per Invoice'],
-    ['commodityDescription', 'Commodity Description'],
+    ['commodityDescription', 'commodity Description'],
     ['shippingCompanyName', 'Shipping Company Name'],
     ['blAwbNo', 'BL/AWB No'],
     ['vesselName', 'Vessel Name'],
@@ -309,6 +351,7 @@ export default function AddShippingBill() {
                 id={name}
                 name={name}
                 maxLength={50}
+                max={type === 'date' ? today : undefined}   // 🔹 Block future dates
                 className="w-full border border-gray-400 rounded px-3 py-2"
                 autoComplete="off"
               />
@@ -328,6 +371,7 @@ export default function AddShippingBill() {
                 id={name}
                 name={name}
                 maxLength={50}
+                max={type === 'date' ? today : undefined}  
                 className="w-full border border-gray-400 rounded px-3 py-2"
                 autoComplete="off"
               />
@@ -336,15 +380,28 @@ export default function AddShippingBill() {
         </div>
       </fieldset>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className={`bg-[#08315c] text-white font-semibold px-8 py-3 rounded text-lg ${
-          isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
-        }`}
-      >
-        {isSubmitting ? 'Submitting...' : 'Submit'}
-      </button>
+      <div className="flex justify-start space-x-4 mt-6">
+        {/* Update button */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`bg-[#08315c] text-white font-semibold px-8 py-3 rounded text-lg ${
+            isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
+          }`}
+        >
+          {isSubmitting ? 'Updating...' : 'Update'}
+        </button>
+
+        {/* Cancel button */}
+        <button
+          type="button"
+          onClick={() => router.back()} // or handleCancel()
+          className="bg-gray-500 text-white font-semibold px-8 py-3 rounded text-lg hover:bg-gray-600"
+        >
+          Cancel
+        </button>
+      </div>
+
     </form>
   );
 }

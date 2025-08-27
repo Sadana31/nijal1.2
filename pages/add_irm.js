@@ -8,6 +8,7 @@ export default function AddIRM() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef(null);
+  const today = new Date().toISOString().split('T')[0];
 
   const decimalFields = ['remittanceAmount', 'utilizedAmount', 'outstandingAmount'];
   const countryCodeFields = ['remitterCountryCode'];
@@ -22,6 +23,7 @@ export default function AddIRM() {
       input.after(error);
     }
     error.textContent = message;
+    input.style.borderColor = 'red'; // 🔴 highlight border
   };
 
   const clearError = (input) => {
@@ -29,7 +31,9 @@ export default function AddIRM() {
     if (error && error.classList.contains('error-message')) {
       error.textContent = '';
     }
+    input.style.borderColor = ''; // reset border
   };
+
 
   const validateField = (input) => {
     clearError(input);
@@ -46,6 +50,16 @@ export default function AddIRM() {
       return false;
     }
 
+    // IE Code rule
+    if (id === 'ieCode') {
+      input.value = input.value.replace(/[^a-zA-Z0-9]/g, ''); // only alphanumeric
+      if (input.value.length > 10) {
+        input.value = input.value.slice(0, 10); // hard stop at 10
+      }
+      return;
+    }
+
+    // Currency rule
     if (id === 'remittanceCurrency') {
       if (!/^[A-Z]{3}$/.test(val)) {
         showError(input, 'Enter exactly 3 uppercase letters');
@@ -53,6 +67,7 @@ export default function AddIRM() {
       }
     }
 
+    // Country code rule
     if (countryCodeFields.includes(id)) {
       if (val !== '' && !/^[A-Z]{3}$/.test(val)) {
         showError(input, 'Enter exactly 3 uppercase letters or leave empty');
@@ -60,12 +75,19 @@ export default function AddIRM() {
       }
     }
 
-    const allowSpaceFields = ['bankName', 'remitterAddress', 'otherBankRef'];
-    if (!allowSpaceFields.includes(id) && /\s/.test(val)) {
-      showError(input, 'No spaces allowed');
-      return false;
+    // Date rule (not older than today)
+    if (id === 'remittanceDate' && val) {
+      const inputDate = new Date(val);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (inputDate < today) {
+        showError(input, 'Date cannot be older than today');
+        return false;
+      }
     }
 
+    // Decimal rule
     if (decimalFields.includes(id)) {
       if (!/^\d{1,18}(\.\d{1,2})?$/.test(val)) {
         showError(input, 'Enter a valid decimal (18 digits max, 2 decimals)');
@@ -75,6 +97,7 @@ export default function AddIRM() {
 
     return true;
   };
+
 
   const handleBlur = (e) => validateField(e.target);
   const handleInputWrapper = (e) => handleInput(e);
@@ -245,6 +268,7 @@ export default function AddIRM() {
                 name={name}
                 required
                 maxLength={name === 'remittanceCurrency' ? 3 : 50}
+                min={name === 'remittanceDate' ? today : undefined}  // 🔹 Block older dates
                 className="w-full border border-gray-400 rounded px-3 py-2"
               />
             </div>
@@ -270,15 +294,28 @@ export default function AddIRM() {
         </div>
       </fieldset>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className={`bg-[#08315c] text-white font-semibold px-8 py-3 rounded text-lg ${
-          isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
-        }`}
-      >
-        {isSubmitting ? 'Submitting...' : 'Submit'}
-      </button>
+      <div className="flex justify-start space-x-4 mt-6">
+        {/* Update button */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`bg-[#08315c] text-white font-semibold px-8 py-3 rounded text-lg ${
+            isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
+          }`}
+        >
+          {isSubmitting ? 'Updating...' : 'Update'}
+        </button>
+
+        {/* Cancel button */}
+        <button
+          type="button"
+          onClick={() => router.back()} // or handleCancel()
+          className="bg-gray-500 text-white font-semibold px-8 py-3 rounded text-lg hover:bg-gray-600"
+        >
+          Cancel
+        </button>
+      </div>
+
     </form>
   );
 }

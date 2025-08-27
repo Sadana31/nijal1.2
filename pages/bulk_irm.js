@@ -11,31 +11,31 @@ export default function BulkIRMUpload() {
   const [fileName, setFileName] = useState('');
 
   const headers = [
-    'SrNo', 'ADCode', 'BankName', 'IECode', 'RemittanceRefNumber',
-    'RemittanceDate', 'PurposeCode', 'RemittanceCurrency', 'RemittanceAmount',
-    'UtilizedAmount', 'OutstandingAmount', 'RemitterName', 'RemitterAddress',
-    'RemitterCountryCode', 'RemitterBank', 'OtherBankRefNumber', 'Status', 'RemittanceType'
+    'SrNo', 'adCode', 'bankName', 'ieCode', 'RemittanceRefNumber',
+    'remittanceDate', 'purposeCode', 'remittanceCurrency', 'remittanceAmount',
+    'utilizedAmount', 'outstandingAmount', 'remitterName', 'remitterAddress',
+    'remitterCountryCode', 'remitterBank', 'otherBankRefNumber', 'Status', 'remittanceType'
   ];
 
   const sampleRow = {
     SrNo: '1',
-    ADCode: '6390005',
-    BankName: 'Kotak Bank',
-    IECode: '654987321',
+    adCode: '6390005',
+    bankName: 'Kotak Bank',
+    ieCode: '654987321',
     RemittanceRefNumber: '0002GRS65498732',
-    RemittanceDate: '10-05-2024',
-    PurposeCode: 'P1305',
-    RemittanceCurrency: 'JPY',
-    RemittanceAmount: '4000000',
-    UtilizedAmount: '1000000',
-    OutstandingAmount: '3000000',
-    RemitterName: 'UVW Inc',
-    RemitterAddress: 'Osaka Street',
-    RemitterCountryCode: 'JP',
-    RemitterBank: 'MUFG',
-    OtherBankRefNumber: 'Test654987',
+    remittanceDate: '10-05-2024',
+    purposeCode: 'P1305',
+    remittanceCurrency: 'JPY',
+    remittanceAmount: '4000000',
+    utilizedAmount: '1000000',
+    outstandingAmount: '3000000',
+    remitterName: 'UVW Inc',
+    remitterAddress: 'Osaka Street',
+    remitterCountryCode: 'JP',
+    remitterBank: 'MUFG',
+    otherBankRefNumber: 'Test654987',
     Status: 'partially',
-    RemittanceType: 'IRM'
+    remittanceType: 'IRM'
   };
 
   const downloadSampleCSV = () => {
@@ -65,7 +65,7 @@ export default function BulkIRMUpload() {
         const invalid = [];
 
         const requiredFields = [
-          "remittanceRefNo", "adCode", "bankName", "ieCode", "remittanceDate",
+          "RemittanceRefNo", "adCode", "bankName", "ieCode", "remittanceDate",
           "purposeCode", "remittanceCurrency", "remittanceAmount", "utilizedAmount",
           "outstandingAmount", "remitterName", "remitterAddress", "remitterCountryCode",
           "remitterBank", "otherBankRef", "status", "remittanceType"

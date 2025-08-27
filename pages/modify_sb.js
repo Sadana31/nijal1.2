@@ -42,6 +42,11 @@ export default function ModifyShippingBill() {
       val = val.replace(/[^a-zA-Z0-9.\- ]/g, '').slice(0, 50);
     }
 
+    if (id === 'portCode') {
+      input.value = input.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6); 
+      return;
+    }
+
     input.value = val;
     setFormData((prev) => ({ ...prev, [id]: val }));
   };
@@ -244,7 +249,11 @@ export default function ModifyShippingBill() {
                 maxLength={50}
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
-                className="w-full border border-gray-400 rounded px-3 py-2"
+                className={
+                  formData[name]
+                    ? 'w-full border border-gray-400 rounded px-3 py-2 bg-gray-200 text-gray-700' // greyed auto-fill
+                    : 'w-full border border-gray-400 rounded px-3 py-2' // normal
+                }
               />
             </div>
           ))}
@@ -263,7 +272,7 @@ export default function ModifyShippingBill() {
             ['originOfGoods', 'Origin of Goods'],
             ['portOfDestination', 'Port of Destination'],
             ['tenorAsPerInvoice', 'Tenor as per Invoice'],
-            ['commodityDescription', 'Commodity Description'],
+            ['commodityDescription', 'commodity Description'],
             ['shippingCompanyName', 'Shipping Company Name'],
             ['blAwbNo', 'BL/AWB No'],
             ['vesselName', 'Vessel Name'],
@@ -281,19 +290,33 @@ export default function ModifyShippingBill() {
                 formNoValidate
                 value={formData[name] || ''}
                 onChange={(e) => setFormData({ ...formData, [name]: e.target.value })}
-                className="w-full border border-gray-400 rounded px-3 py-2"
+                className={
+                  formData[name]
+                    ? 'w-full border border-gray-400 rounded px-3 py-2 bg-gray-200 text-gray-700' // greyed auto-fill
+                    : 'w-full border border-gray-400 rounded px-3 py-2' // normal
+                }
               />
             </div>
           ))}
         </div>
       </fieldset>
 
-      <button
-        type="submit"
-        className="bg-[#08315c] text-white font-semibold px-8 py-3 rounded hover:bg-[#061f38] text-lg"
-      >
-        Update
-      </button>
+      <div className="flex gap-4 mt-6">
+        <button
+          type="submit"
+          className="bg-[#08315c] text-white font-semibold px-8 py-3 rounded hover:bg-[#061f38] text-lg"
+        >
+          Update
+        </button>
+
+        <button
+          type="button"
+          className="bg-gray-400 text-white font-semibold px-8 py-3 rounded hover:bg-gray-600 text-lg"
+          onClick={() => router.push('/')} 
+        >
+          Cancel
+        </button>
+        </div>
     </form>
   );
 }
