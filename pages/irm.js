@@ -1,5 +1,5 @@
 'use client';
-
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useState } from 'react';
@@ -18,6 +18,7 @@ export default function IRMPage() {
   const [sortDirection, setSortDirection] = useState('asc');
 
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState("All"); // All, Completed, Partial, Outstanding
 
   const [currentPage, setCurrentPage] = useState(1);
   const startIndex = (currentPage - 1) * entriesToShow;
@@ -75,6 +76,14 @@ export default function IRMPage() {
                 });
               }
   };
+
+  const getStatus = (row) => {
+    if (row.outstandingAmount === 0) return "Completed";
+    if (row.outstandingAmount > 0 && row.outstandingAmount < row.remittanceAmount) return "Partial";
+    if (row.outstandingAmount === row.remittanceAmount) return "Outstanding";
+    return "Other";
+  };
+
 
   const formatDate = (input) => {
         if (!input || typeof input !== 'string') return '';
@@ -237,7 +246,12 @@ export default function IRMPage() {
 
 
 
-  const sortedData = [...filteredData].sort((a, b) => {
+  const statusFiltered = filteredData.filter(row => {
+    const status = getStatus(row);
+    return statusFilter === "All" || status === statusFilter;
+  });
+
+  const sortedData = [...statusFiltered].sort((a, b) => {
     if (!sortField) return 0;
     const valA = a[sortField] || '';
     const valB = b[sortField] || '';
@@ -269,9 +283,21 @@ export default function IRMPage() {
     { label: 'Status', key: 'status' }
   ];
 
+// At the top of your component (after other useStates)
+const [columnsToShow, setColumnsToShow] = useState(sortableHeaders.map(h => h.label));
+
+useEffect(() => {
+  const saved = localStorage.getItem('irmSelectedColumns');
+  if (saved) {
+    const savedColumns = JSON.parse(saved);
+    setColumnsToShow(savedColumns);
+  } else {
+    setColumnsToShow(sortableHeaders.map(h => h.label));
+  }
+}, []);
 
   return (
-    <div className="px-12 py-10 font-sans">
+    <div className="pl-12 pr-2 py-10 font-sans">
       <h1 className="text-4xl font-bold mb-6 text-[#08315c]">IRM Details Dashboard</h1>
 
       <div className="flex justify-between items-center mb-6">
@@ -306,126 +332,235 @@ export default function IRMPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-3">
-        <label className='text-black'>Show</label>
-        <select
-          value={entriesToShow}
-          onChange={(e) => setEntriesToShow(parseInt(e.target.value))}
-          className="border border-gray-300 rounded px-2 py-1 text-black"
-        >
-          {[5, 10, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
-        </select>
-        <label className='text-black'>entries</label>
-      </div>
+      <div className="flex justify-between items-center mb-5">
+  {/* Left: Quick Filters */}
+  <div className="flex items-center gap-3">
+    <span className="font-semibold text-black">Quick Filters :</span>
+    {["All", "Completed", "Partial", "Outstanding"].map((f) => (
+      <label
+        key={f}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer select-none transition
+          ${statusFilter === f ? "bg-blue-50 border-blue-600" : "bg-gray-50 border-gray-300"}`}
+      >
+        <input
+          type="radio"
+          name="statusFilter"
+          value={f}
+          checked={statusFilter === f}
+          onChange={() => setStatusFilter(f)}
+          className="w-4 h-4 text-blue-600 border-gray-400"
+        />
+        <span className="text-black">{f}</span>
+      </label>
+    ))}
+  </div>
+
+  {/* Right: Configure + Reset Columns */}
+  <div className="flex items-center gap-4">
+    <button
+      onClick={() => router.push('/irm_columns')}
+      className="bg-[#4c94a6] hover:bg-[#417e8e] text-white px-5 py-2 rounded-md shadow font-medium transition-all"
+    >
+      Configure Columns
+    </button>
+    <button
+      onClick={() => {
+        localStorage.removeItem('irmSelectedColumns');
+        toast('Columns reset to default!');
+        router.refresh(); // Re-render page to reflect default columns
+      }}
+      className="bg-[#4c94a6] hover:bg-[#417e8e] text-white px-5 py-2 rounded-md shadow font-medium transition-all"
+    >
+      Reset
+    </button>
+  </div>
+</div>
+
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[#7bbbc2] font-semibold">
               <th className="px-2 py-3 w-4"></th>
-              <th className="px-2 py-3 w-4 text-black"></th>
-              {sortableHeaders.map(({ label, key }) => (
-                <th
-                  key={key}
-                  onClick={() => handleSort(key)}
-                  className="px-4 py-3 text-left text-black cursor-pointer select-none"
-                >
-                  {label}
-                  <span className="inline-block w-4 ml-1">
-                    {sortField === key ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '↕'}
-                  </span>
-                </th>
-              ))}
+              <th className="px-2 py-3 w-4"></th>
+              {columnsToShow.map((label) => {
+                const header = sortableHeaders.find(h => h.label === label);
+                const key = header?.key || label; // fallback
+                return (
+                  <th
+                    key={key}
+                    onClick={() => handleSort(key)}
+                    className="px-4 py-3 text-left text-black cursor-pointer select-none"
+                  >
+                    {label}
+                    <span className="inline-block w-4 ml-1">
+                      {sortField === key ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '↕'}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
+
           <tbody>
-            {visibleRows.map((row) => (
-              <>
-                <tr
-                  key={row._id}
-                  className="border-b cursor-pointer hover:bg-gray-50"
-                  onDoubleClick={() => {
-                    setModalData(row);     // set the clicked row’s data
-                    setModalVisible(true); // open modal
-                  }}
-                >
-                  <td className="px-2 py-2">
-                    <input
-                      type="radio"
-                      name="irmSelection"
-                      checked={selectedIRMs.has(row.RemittanceRefNo)}
-                      onChange={() => {
-                        const isSelected = selectedIRMs.has(row.RemittanceRefNo);
-                        const newSet = new Set();
-                        if (!isSelected) {
-                          newSet.add(row.RemittanceRefNo);
-                        }
-                        setSelectedIRMs(newSet);
-                      }}
-                    />
-                  </td>
-                  <td className="px-2 py-2">
-                    <button onClick={() => toggleRow(row._id)} className="font-bold text-black">
-                      {expandedRows.includes(row._id) ? '−' : '+'}
-                    </button>
-                  </td>
-                  <td className="px-4 py-2 text-black">{row.RemittanceRefNo}</td>
-                  <td className="px-4 py-2 text-black">{row.bankName}</td>
-                  <td className="px-4 py-2 text-black">{row.ieCode}</td>
-                  <td className="px-4 py-2 text-black">{formatDate(row.remittanceDate)}</td>
-                  <td className="px-4 py-2 text-black">{row.remittanceAmount}</td>
-                  <td className="px-4 py-2 text-black">{row.outstandingAmount}</td>
-                  <td className="px-4 py-2 text-black">{row.remitterName}</td>
-                  <td className="px-4 py-2 text-black">{row.status}</td>
-                </tr>
-                {expandedRows.includes(row._id) && (
-                  <tr className="bg-gray-50 text-sm">
-                  <td colSpan={11}>
-                    <table className="w-full border-collapse text-left">
-                      {/* First Row */}
-                      <thead className="bg-gray-100 font-semibold text-black">
-                        <tr>
-                          {['',"adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
-                            <th key={i} className="px-4 py-2">{key}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          {['',"adCode", "purposeCode", "remittanceCurrency", "utilizedAmount"].map((key, i) => (
-                            <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
-                          ))}
-                        </tr>
-                      </tbody>
+  {visibleRows.map((row) => (
+    <React.Fragment key={row._id}>
+      <tr
+        className={`border-b cursor-pointer 
+          ${selectedIRMs.has(row.RemittanceRefNo) 
+            ? 'bg-blue-200 hover:bg-blue-300' 
+            : 'hover:bg-gray-200'}`}
+        onDoubleClick={() => {
+          setModalData(row);
+          setModalVisible(true);
+        }}
+        onClick={() => {
+          const newSet = new Set(selectedIRMs);
+          if (newSet.has(row.RemittanceRefNo)) {
+            newSet.clear(); // deselect if already selected
+          } else {
+            newSet.clear();
+            newSet.add(row.RemittanceRefNo);
+          }
+          setSelectedIRMs(newSet);
+        }}
+      >
+        {/* Radio Selection */}
+        <td className="px-2 py-2">
+          <input
+            type="radio"
+            name="irmSelection"
+            checked={selectedIRMs.has(row.RemittanceRefNo)}
+            onChange={() => {
+              const newSet = new Set(selectedIRMs);
+              if (newSet.has(row.RemittanceRefNo)) {
+                newSet.clear();
+              } else {
+                newSet.clear();
+                newSet.add(row.RemittanceRefNo);
+              }
+              setSelectedIRMs(newSet);
+            }}
+          />
+        </td>
 
-                      {/* Second Row */}
-                      <thead className="bg-gray-100 font-semibold text-black">
-                        <tr>
-                          {['',"remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
-                            <th key={i} className="px-4 py-2">{key}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          {['',"remitterAddress", "remitterCountryCode", "remitterBank", "otherBankRefNumber"].map((key, i) => (
-                            <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
-                          ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-)}
+        {/* Expand/Collapse */}
+        <td className="px-2 py-2">
+          <button onClick={() => toggleRow(row._id)} className="font-bold text-black">
+            {expandedRows.includes(row._id) ? '−' : '+'}
+          </button>
+        </td>
 
-              </>
-            ))}
-          </tbody>
+        {/* Dynamic Columns */}
+        {columnsToShow.map((label) => {
+          const header = sortableHeaders.find(h => h.label === label);
+          const key = header?.key || label;
+          let value = row[key];
+
+          // Special formatting
+          if (key === 'remittanceDate') value = formatDate(value);
+
+          if (key === 'status') {
+            value =
+              row.outstandingAmount === 0
+                ? 'Completed'
+                : row.outstandingAmount > 0 && row.outstandingAmount < row.remittanceAmount
+                ? 'Partial Payment'
+                : row.outstandingAmount === row.remittanceAmount
+                ? 'Outstanding'
+                : '-';
+          }
+
+          return (
+            <td
+              key={key}
+              className="px-4 py-2 text-black"
+              style={{
+                ...(key === 'status' && {
+                  color:
+                    row.outstandingAmount === 0
+                      ? 'green'
+                      : row.outstandingAmount > 0 && row.outstandingAmount < row.remittanceAmount
+                      ? 'darkorange'
+                      : row.outstandingAmount === row.remittanceAmount
+                      ? 'red'
+                      : 'black'
+                })
+              }}
+            >
+              {value || '-'}
+            </td>
+          );
+        })}
+      </tr>
+
+      {/* Expanded Row */}
+      {expandedRows.includes(row._id) && (
+        <tr className="bg-gray-50 text-sm">
+          <td colSpan={2 + columnsToShow.length}>
+            <table className="w-full border-collapse text-left">
+              {/* First Row */}
+              <thead className="bg-gray-100 font-semibold text-black">
+                <tr>
+                  {['', 'adCode', 'purposeCode', 'remittanceCurrency', 'utilizedAmount'].map((key, i) => (
+                    <th key={i} className="px-4 py-2">{key}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {['', 'adCode', 'purposeCode', 'remittanceCurrency', 'utilizedAmount'].map((key, i) => (
+                    <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
+                  ))}
+                </tr>
+              </tbody>
+
+              {/* Second Row */}
+              <thead className="bg-gray-100 font-semibold text-black">
+                <tr>
+                  {['', 'remitterAddress', 'remitterCountryCode', 'remitterBank', 'otherBankRefNumber'].map((key, i) => (
+                    <th key={i} className="px-4 py-2">{key}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {['', 'remitterAddress', 'remitterCountryCode', 'remitterBank', 'otherBankRefNumber'].map((key, i) => (
+                    <td key={i} className="px-4 py-2 text-black">{row[key] || '-'}</td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      )}
+    </React.Fragment>
+  ))}
+</tbody>
+
         </table>
       </div>
       
-<div className="flex justify-end mt-6 pr-4 text-xs">
-  <div className="flex items-center gap-1">
+     <div className="flex items-center justify-between mb-3 mt-5">
+  {/* Entries dropdown (left) */}
+  <div className="flex items-center gap-2">
+    <label className="text-black">Show</label>
+    <select
+      value={entriesToShow}
+      onChange={(e) => setEntriesToShow(parseInt(e.target.value))}
+      className="border border-gray-300 rounded px-2 py-1 text-black"
+    >
+      {[5, 10, 25, 50].map((n) => (
+        <option key={n} value={n}>
+          {n}
+        </option>
+      ))}
+    </select>
+    <label className="text-black">entries</label>
+  </div>
+
+  {/* Pagination (right) */}
+  <div className="flex items-center gap-1 text-xs">
     <button
       onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
       disabled={currentPage === 1}
@@ -440,24 +575,24 @@ export default function IRMPage() {
         for (let i = 1; i <= totalPages; i++) pages.push(i);
       } else {
         pages.push(1);
-        if (currentPage > 4) pages.push('...');
+        if (currentPage > 4) pages.push("...");
         const start = Math.max(2, currentPage - 1);
         const end = Math.min(totalPages - 1, currentPage + 1);
         for (let i = start; i <= end; i++) pages.push(i);
-        if (currentPage < totalPages - 3) pages.push('...');
+        if (currentPage < totalPages - 3) pages.push("...");
         pages.push(totalPages);
       }
 
       return pages.map((p, i) => (
         <button
           key={i}
-          onClick={() => typeof p === 'number' && setCurrentPage(p)}
-          disabled={p === '...'}
+          onClick={() => typeof p === "number" && setCurrentPage(p)}
+          disabled={p === "..."}
           className={`px-2 py-[2px] border rounded ${
             p === currentPage
-              ? 'border-black font-semibold text-black'
-              : 'border-gray-400 text-gray-800'
-          } ${p === '...' ? 'pointer-events-none opacity-60' : ''}`}
+              ? "border-black font-semibold text-black"
+              : "border-gray-400 text-gray-800"
+          } ${p === "..." ? "pointer-events-none opacity-60" : ""}`}
         >
           {p}
         </button>

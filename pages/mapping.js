@@ -23,6 +23,32 @@ export default function MappingPage() {
   const [rowsPerPage] = useState(10); // you can change number of rows per page
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const [sbUtilizationAmount, setSbUtilizationAmount] = useState(
+    selectedSB?.billOutstandingValue || 0
+  );
+const [irmUtilizationAmount, setIrmUtilizationAmount] = useState(
+  selectedIRM?.outstandingAmount || 0
+);
+
+  let mapped, balance;
+
+  if (mode === 'irmToSb') {
+  // Mapping IRM → SB
+  const selectedSBUtilization = Array.from(selectedSBs).reduce(
+    (sum, sbNo) => sum + (parseFloat(utilization[sbNo]) || 0),
+    0
+  );
+
+  mapped = selectedSBUtilization; // sum of all selected SB utilization
+  balance = (irmUtilizationAmount || 0) - mapped; // IRM entered minus sum of selected SBs
+}
+ else {
+    // Mapping SB → IRM
+    mapped = parseFloat(utilization[selectedIRMs.values().next().value] || 0); // single IRM value
+    balance = (sbUtilizationAmount || 0) - mapped;
+  }
+
+
 
   useEffect(() => {
     const storedIRM = sessionStorage.getItem("selectedRow");
@@ -233,6 +259,7 @@ const handleSubmitMappingIRMToSB = async () => {
     };
 
 
+
     console.log("Sending payload:", payload);
 
     try {
@@ -256,6 +283,15 @@ const handleSubmitMappingIRMToSB = async () => {
 
 };
 
+useEffect(() => {
+  if (selectedSB) setSbUtilizationAmount(selectedSB.billOutstandingValue || 0);
+}, [selectedSB]);
+
+useEffect(() => {
+  if (selectedSB) setIrmUtilizationAmount(selectedIRM.outstandingValue || 0);
+}, [selectedSB]);
+
+
   const visibleRows = mode === 'irmToSb' ? sbData : irmData;
   const currentRows = visibleRows.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
@@ -276,10 +312,11 @@ const handleSubmitMappingIRMToSB = async () => {
               <th className="px-3 py-2">Bank Name</th>
               <th className="px-3 py-2">IE Code</th>
               <th className="px-3 py-2">Remittance Date</th>
-              <th className="px-3 py-2">Remittance Amount</th>
-              <th className="px-3 py-2">Outstanding Amount</th>
               <th className="px-3 py-2">Remitter Name</th>
               <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">Remittance Amount</th>
+              <th className="px-3 py-2">Outstanding Amount</th>
+              <th className="px-3 py-2">Utilization Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -293,10 +330,17 @@ const handleSubmitMappingIRMToSB = async () => {
               <td className="px-3 py-2">{selectedIRM.bankName}</td>
               <td className="px-3 py-2">{selectedIRM.ieCode}</td>
               <td className="px-3 py-2">{selectedIRM.remittanceDate}</td>
-              <td className="px-3 py-2">{selectedIRM.remittanceAmount}</td>
-              <td className="px-3 py-2">{selectedIRM.outstandingAmount}</td>
               <td className="px-3 py-2">{selectedIRM.remitterName}</td>
               <td className="px-3 py-2">{selectedIRM.Status}</td>
+              <td className="px-3 py-2">{selectedIRM.remittanceAmount}</td>
+              <td className="px-3 py-2">{selectedIRM.outstandingAmount}</td>
+              <td className='px-3 py-2'><input
+                  type="number"
+                  className="border border-gray-300 rounded px-2 py-1 w-24 text-black"
+                  value={irmUtilizationAmount}
+                  onChange={(e) => setIrmUtilizationAmount(parseFloat(e.target.value) || 0)}
+                />
+                </td>
             </tr>
             {showIRMDetails && (
               <tr className="bg-gray-50 text-sm">
@@ -338,6 +382,39 @@ const handleSubmitMappingIRMToSB = async () => {
         </table>
       </div>
     )}
+
+    <div className="mt-1 mb-5 inline-flex border rounded overflow-hidden">
+  {/* IRM Mapping Available */}
+  <div className="flex">
+    <div className="bg-blue-100 text-black px-4 py-2 border-r border-gray-300 text-xl">
+      IRM Mapping Available
+    </div>
+    <div className="bg-white text-black font-bold text-xl px-4 py-2 border-r border-gray-300">
+      {irmUtilizationAmount}
+    </div>
+  </div>
+
+  {/* Mapped (sum of selected SB utilization) */}
+  <div className="flex">
+    <div className="bg-blue-100 text-black text-xl px-4 py-2 border-r border-gray-300">
+      Mapped
+    </div>
+    <div className="bg-white text-black font-bold text-xl px-4 py-2 border-r border-gray-300">
+      {mapped}
+    </div>
+  </div>
+
+  {/* Balance (IRM - Mapped) */}
+  <div className="flex">
+    <div className="bg-blue-100 text-black text-xl px-4 py-2 border-r border-gray-300">
+      Balance
+    </div>
+    <div className="bg-white text-black font-bold text-xl px-4 py-2">
+      {balance}
+    </div>
+  </div>
+</div>
+
 
     
     {sbData.length > 0 && (
@@ -525,11 +602,12 @@ const handleSubmitMappingIRMToSB = async () => {
                 <th className="px-3 py-2">Port Code</th>
                 <th className="px-3 py-2">Bank Name</th>
                 <th className="px-3 py-2">Invoice Count</th>
+                <th className="px-3 py-2">Buyer Name</th>
+                <th className="px-3 py-2">Buyer Country Code</th>
                 <th className="px-3 py-2">FOB Currency</th>
                 <th className="px-3 py-2">Export Bill Value</th>
                 <th className="px-3 py-2">Bill Outstanding Value</th>
-                <th className="px-3 py-2">Buyer Name</th>
-                <th className="px-3 py-2">Buyer Country Code</th>
+                <th className="px-3 py-2">Utilization Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -548,11 +626,18 @@ const handleSubmitMappingIRMToSB = async () => {
                 <td className="px-3 py-2">{selectedSB.portCode}</td>
                 <td className="px-3 py-2">{selectedSB.bankName}</td>
                 <td className="px-3 py-2">{selectedSB.invoiceCount}</td>
+                <td className="px-3 py-2">{selectedSB.buyerName}</td>
+                <td className="px-3 py-2">{selectedSB.buyerCountryCode}</td>
                 <td className="px-3 py-2">{selectedSB.fobCurrency}</td>
                 <td className="px-3 py-2">{selectedSB.exportBillValue}</td>
                 <td className="px-3 py-2">{selectedSB.billOutstandingValue}</td>
-                <td className="px-3 py-2">{selectedSB.buyerName}</td>
-                <td className="px-3 py-2">{selectedSB.buyerCountryCode}</td>
+                <td className='px-3 py-2'><input
+                  type="number"
+                  className="border border-gray-300 rounded px-2 py-1 w-24 text-black"
+                  value={sbUtilizationAmount}
+                  onChange={(e) => setSbUtilizationAmount(parseFloat(e.target.value) || 0)}
+                />
+                </td>
               </tr>
               {showDetails && (
                 <tr className="bg-gray-50 text-sm">
@@ -604,6 +689,40 @@ const handleSubmitMappingIRMToSB = async () => {
           </table>
         </div>
       )}
+
+
+<div className="mt-1 mb-5 inline-flex border rounded overflow-hidden">
+  {/* IRM Mapping Available */}
+  <div className="flex">
+    <div className="bg-blue-100 text-black  px-4 py-2 border-r border-gray-300 text-xl">
+      IRM Mapping Available
+    </div>
+    <div className="bg-white text-black font-bold text-xl px-4 py-2 border-r border-gray-300">
+      {sbUtilizationAmount}
+    </div>
+  </div>
+
+  {/* Mapped */}
+  <div className="flex">
+    <div className="bg-blue-100 text-black text-xl px-4 py-2 border-r border-gray-300">
+      Mapped
+    </div>
+    <div className="bg-white text-black font-bold text-xl px-4 py-2 border-r border-gray-300">
+      {mapped}
+    </div>
+  </div>
+
+  {/* Balance */}
+  <div className="flex">
+    <div className="bg-blue-100 text-black text-xl px-4 py-2 border-r border-gray-300">
+      Balance
+    </div>
+    <div className="bg-white text-black font-bold text-xl px-4 py-2">
+      {balance}
+    </div>
+  </div>
+</div>
+
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
@@ -753,5 +872,6 @@ const handleSubmitMappingIRMToSB = async () => {
         </div>
       )}
     </div>
+
   );
 }

@@ -24,7 +24,10 @@
     const [entriesPerPage, setEntriesPerPage] = useState(10); // default 10
     const [mappingHistory, setMappingHistory] = useState([]);
 
+    const [statusFilter, setStatusFilter] = useState("All");
     const router = useRouter();
+    const [selectedColumns, setSelectedColumns] = useState([]);
+
 
       const handleClick = (text) => {
         if (text === 'Add Shipping Bill') {
@@ -233,17 +236,51 @@
     { label: 'Bill Outstanding Value', key: 'billOutstandingValue' },
     { label: 'Buyer Name', key: 'buyerName' },
     { label: 'Buyer Country Code', key: 'buyerCountryCode' },
+    { label: 'Status', key: 'status' },
   ];
 
+  useEffect(() => {
+    const handleFocus = () => {
+      const savedCols = localStorage.getItem('sbSelectedColumns');
+      if (savedCols) {
+        setSelectedColumns(JSON.parse(savedCols));
+      } else {
+        // fallback: show all columns by default
+        setSelectedColumns(sortableHeaders.map(h => h.key));
+      }
+    };
 
-   const sortedData = [...filteredData].sort((a, b) => {
+    window.addEventListener('focus', handleFocus);
+    handleFocus(); // also read on mount
+
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+
+
+   const filteredByStatus = filteredData.filter((row) => {
+  const status =
+    row.billOutstandingValue === 0
+      ? "Completed"
+      : row.billOutstandingValue > 0 && row.billOutstandingValue < row.exportBillValue
+        ? "Partial"
+        : row.billOutstandingValue === row.exportBillValue
+          ? "Outstanding"
+          : "Other";
+
+  if (statusFilter === "All") return true;
+  return status === statusFilter;
+});
+
+const sortedData = [...filteredByStatus].sort((a, b) => {
   if (!sortField) return 0;
-  const valA = a[sortField] || '';
-  const valB = b[sortField] || '';
-  if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-  if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+  const valA = a[sortField] || "";
+  const valB = b[sortField] || "";
+  if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+  if (valA > valB) return sortDirection === "asc" ? 1 : -1;
   return 0;
 });
+
   const totalPages = Math.ceil(sortedData.length / entriesToShow);
 
   const visibleRows = sortedData.slice(
@@ -251,10 +288,14 @@
     currentPage * entriesToShow
   );
 
-
+  const resetColumns = () => {
+    localStorage.removeItem('sbSelectedColumns'); // clear saved config
+    setSelectedColumns([]); // reset locally
+    toast('Column configuration reset!');
+  };
 
     return (
-      <div className="px-15 py-10 bg-white min-h-screen font-sans">
+      <div className="pl-14 pr-3 py-10 bg-white min-h-screen font-sans">
         <h1 className="text-4xl font-bold text-gray-800 mb-6">SB Details Dashboard</h1>
 
         {/* Search & Actions */}
@@ -300,24 +341,56 @@
           </div>
         </div>
 
-        {/* Entries Control */}
-        <div className="flex items-center gap-2 mb-3 text-sm">
-          <label className="text-gray-700">Show</label>
-          <select
-            value={entriesToShow}
-            onChange={(e) => {
-              setEntriesToShow(parseInt(e.target.value));
-              setCurrentPage(1); // Reset to page 1
-            }}
-            className="border border-gray-300 rounded px-2 py-1 text-gray-800"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-          <label className="text-gray-700">entries</label>
-        </div>
+
+{/* Quick Filters & Configure/Reset Columns Button */}
+<div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+  {/* Left side: Quick Filters */}
+  <div className="flex flex-wrap items-center gap-3">
+    <span className="font-semibold text-black">Quick Filters:</span>
+
+    {["All", "Completed", "Partial", "Outstanding"].map((f) => (
+      <label
+        key={f}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer select-none transition
+          ${statusFilter === f ? "bg-blue-50 border-blue-600" : "bg-gray-50 border-gray-300"}`}
+      >
+        <input
+          type="radio"
+          name="statusFilter"
+          value={f}
+          checked={statusFilter === f}
+          onChange={() => setStatusFilter(f)}
+          className="w-4 h-4 text-blue-600 border-gray-400"
+        />
+        <span className="text-black">{f}</span>
+      </label>
+    ))}
+  </div>
+
+  {/* Right side: Configure Columns and Reset Columns */}
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => router.push('/sb_columns')}
+      className="bg-[#4c94a6] hover:bg-[#417e8e] text-white px-5 py-2 rounded-md shadow font-medium transition-all"
+    >
+      Configure Columns
+    </button>
+
+    <button
+  onClick={() => {
+    localStorage.removeItem('sbSelectedColumns'); // clear saved config
+    setSelectedColumns([]); // reset locally
+    toast('Column configuration reset!');
+  }}
+  className="bg-[#4c94a6] hover:bg-red-600 text-white px-5 py-2 rounded-md shadow font-medium transition-all"
+>
+  Reset
+</button>
+
+  </div>
+</div>
+
+        
 
         {/* Table */}
         <div className="overflow-x-auto">
@@ -326,18 +399,21 @@
                 <tr className="bg-[#7bbbc2] text-black font-semibold">
                   <th className="px-3 py-3 w-4"></th>
                   <th className="px-3 py-3 w-4"></th>
-                  {sortableHeaders.map(({ label, key }) => (
-                    <th
-                      key={key}
-                      onClick={() => handleSort(key)}
-                      className="px-4 py-3 text-left cursor-pointer select-none"
-                    >
-                      {label}
-                      <span className="inline-block w-4 text-center">
-                        {sortField === key ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '↕'}
-                      </span>
-                    </th>
-                  ))}
+                  {(selectedColumns.length > 0 ? sortableHeaders.filter(h => selectedColumns.includes(h.key)) : sortableHeaders)
+  .map(({ label, key }) => (
+    <th
+      key={key}
+      onClick={() => handleSort(key)}
+      className="px-4 py-3 text-left cursor-pointer select-none"
+    >
+      {label}
+      <span className="inline-block w-4 text-center">
+        {sortField === key ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '↕'}
+      </span>
+    </th>
+))}
+
+
                 </tr>
               </thead>
             <tbody className="text-gray-800">
@@ -345,11 +421,16 @@
                 <>
                   <tr
                     key={row._id}
-                    className="border-b cursor-pointer hover:bg-gray-50"
+                    className={`border-b cursor-pointer 
+                      ${selectedSB?._id === row._id 
+                        ? 'bg-blue-100 hover:bg-blue-200'  
+                        : 'hover:bg-gray-200'}  
+                    `}
                     onDoubleClick={() => {
-                      setModalData(row);     // set the clicked row’s data
-                      setModalVisible(true); // open modal
+                      setModalData(row);
+                      setModalVisible(true);
                     }}
+                    onClick={() => setSelectedSB(row)} // ✅ clicking sets selection
                   >
                     <td className="px-3 py-2"><input
                       type="radio"
@@ -363,17 +444,43 @@
                         {expandedRows.includes(row._id) ? '−' : '+'}
                       </button>
                     </td>
-                    <td className="px-4 py-2">{row.shippingBillNo}</td>
-                    <td className="px-4 py-2">{row.formNo}</td>
-                    <td>{formatDate(row.shippingBillDate)}</td>
-                    <td className="px-4 py-2">{row.portCode}</td>
-                    <td className="px-4 py-2">{row.bankName}</td>
-                    <td className="px-4 py-2">{row.invoiceCount}</td>
-                    <td className="px-4 py-2">{row.fobCurrency}</td>
-                    <td className="px-4 py-2">{row.exportBillValue}</td>
-                    <td className="px-4 py-2">{row.billOutstandingValue}</td>
-                    <td className="px-4 py-2">{row.buyerName}</td>
-                    <td className="px-4 py-2">{row.buyerCountryCode}</td>
+                   {(selectedColumns.length > 0 ? sortableHeaders.filter(h => selectedColumns.includes(h.key)) : sortableHeaders)
+  .map(({ key }) => {
+    let value = row[key];
+    // special formatting for dates or status
+    if (key === 'shippingBillDate') value = formatDate(value);
+    if (key === 'status') {
+      value = row.billOutstandingValue === 0
+        ? 'Completed'
+        : row.billOutstandingValue > 0 && row.billOutstandingValue < row.exportBillValue
+          ? 'Partial Payment'
+          : row.billOutstandingValue === row.exportBillValue
+            ? 'Outstanding'
+            : '-';
+    }
+
+    return (
+      <td
+        key={key}
+        className={`px-4 py-2 ${key === 'status' ? 'font-semibold' : ''}`}
+        style={{
+          color: key === 'status'
+            ? row.billOutstandingValue === 0
+              ? 'green'
+              : row.billOutstandingValue > 0 && row.billOutstandingValue < row.exportBillValue
+                ? 'darkorange'
+                : row.billOutstandingValue === row.exportBillValue
+                  ? 'red'
+                  : 'black'
+            : 'inherit'
+        }}
+      >
+        {value}
+      </td>
+    );
+})}
+
+
                   </tr>
                   {expandedRows.includes(row._id) && (
                     <tr className="bg-gray-50 text-sm">
@@ -428,8 +535,30 @@
         </div>
 
 
-<div className="flex justify-end mt-6 pr-4 text-xs">
-  <div className="flex items-center gap-1">
+
+{/* Controls Row */}
+<div className="flex items-center justify-between mt-4 mb-3 text-sm">
+  {/* Entries Control */}
+  <div className="flex items-center gap-2">
+    <label className="text-gray-700">Show</label>
+    <select
+      value={entriesToShow}
+      onChange={(e) => {
+        setEntriesToShow(parseInt(e.target.value));
+        setCurrentPage(1); // Reset to page 1
+      }}
+      className="border border-gray-300 rounded px-2 py-1 text-gray-800"
+    >
+      <option value={5}>5</option>
+      <option value={10}>10</option>
+      <option value={25}>25</option>
+      <option value={50}>50</option>
+    </select>
+    <label className="text-gray-700">entries</label>
+  </div>
+
+  {/* Pagination */}
+  <div className="flex items-center gap-1 text-xs pr-2">
     <button
       onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
       disabled={currentPage === 1}
