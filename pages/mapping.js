@@ -30,9 +30,9 @@ const [irmUtilizationAmount, setIrmUtilizationAmount] = useState(
   selectedIRM?.outstandingAmount || 0
 );
 
-  let mapped, balance;
+let mapped,balance;
 
-  if (mode === 'irmToSb') {
+if (mode === 'irmToSb') {
   // Mapping IRM → SB
   const selectedSBUtilization = Array.from(selectedSBs).reduce(
     (sum, sbNo) => sum + (parseFloat(utilization[sbNo]) || 0),
@@ -41,12 +41,17 @@ const [irmUtilizationAmount, setIrmUtilizationAmount] = useState(
 
   mapped = selectedSBUtilization; // sum of all selected SB utilization
   balance = (irmUtilizationAmount || 0) - mapped; // IRM entered minus sum of selected SBs
+} else {
+  // Mapping SB → IRM
+  const selectedIRMUtilization = Array.from(selectedIRMs).reduce(
+    (sum, irmNo) => sum + (parseFloat(utilization[irmNo]) || 0),
+    0
+  );
+
+  mapped = selectedIRMUtilization; // sum of all selected IRMs
+  balance = (sbUtilizationAmount || 0) - mapped;
 }
- else {
-    // Mapping SB → IRM
-    mapped = parseFloat(utilization[selectedIRMs.values().next().value] || 0); // single IRM value
-    balance = (sbUtilizationAmount || 0) - mapped;
-  }
+
 
 
 
@@ -80,9 +85,13 @@ const [irmUtilizationAmount, setIrmUtilizationAmount] = useState(
 
   useEffect(() => {
     const row = sessionStorage.getItem('selectedRow');
-    if (row) setSelectedSB(JSON.parse(row));
-    else toast.error('No Shipping Bill selected');
+    if (row) {
+      const sb = JSON.parse(row);
+      setSelectedSB(sb);
+      setSelectedSBs(new Set()); // reset previously selected SBs
+    } else toast.error('No Shipping Bill selected');
   }, []);
+
 
   useEffect(() => {
   if (!router.isReady) return;
@@ -283,13 +292,16 @@ const handleSubmitMappingIRMToSB = async () => {
 
 };
 
-useEffect(() => {
-  if (selectedSB) setSbUtilizationAmount(selectedSB.billOutstandingValue || 0);
-}, [selectedSB]);
+
 
 useEffect(() => {
-  if (selectedSB) setIrmUtilizationAmount(selectedIRM.outstandingValue || 0);
+  if (selectedIRM) setIrmUtilizationAmount(parseFloat(selectedIRM.outstandingAmount) || 0);
+}, [selectedIRM]);
+
+useEffect(() => {
+  if (selectedSB) setSbUtilizationAmount(parseFloat(selectedSB.billOutstandingValue) || 0);
 }, [selectedSB]);
+
 
 
   const visibleRows = mode === 'irmToSb' ? sbData : irmData;
@@ -478,10 +490,10 @@ useEffect(() => {
           value={utilization[sb.shippingBillNo] || ''}
           onChange={(e) => {
             const value = e.target.value;
-            setUtilization({
-              ...utilization,
-              [sb.shippingBillNo]: value === '' ? '' : parseFloat(value),
-            });
+            setUtilization(prev => ({
+              ...prev,
+              [sb.shippingBillNo]: isNaN(parseFloat(value)) ? 0 : parseFloat(value),
+            }));
           }}
         />
       </td>
