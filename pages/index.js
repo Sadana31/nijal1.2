@@ -1,7 +1,6 @@
   'use client';
 
-  import { useEffect, useState } from 'react';
-  import { useRef, useCallback } from 'react';
+  import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
   import { useRouter } from 'next/router';
   import {toast} from 'sonner';
   import React from 'react'; 
@@ -258,19 +257,26 @@
 
 
 
-   const filteredByStatus = filteredData.filter((row) => {
-  const status =
-    row.billOutstandingValue === 0
-      ? "Completed"
-      : row.billOutstandingValue > 0 && row.billOutstandingValue < row.exportBillValue
-        ? "Partial"
-        : row.billOutstandingValue === row.exportBillValue
-          ? "Outstanding"
-          : "Other";
+   const filteredByStatus = useMemo(() => {
+      return filteredData.filter((row) => {
+        const outstanding = Number(row.billOutstandingValue);
+        const exportVal = Number(row.exportBillValue);
 
-  if (statusFilter === "All") return true;
-  return status === statusFilter;
-});
+        const status =
+          outstanding === 0
+            ? "Completed"
+            : outstanding > 0 && outstanding < exportVal
+              ? "Partial"
+              : outstanding === exportVal
+                ? "Outstanding"
+                : "Other";
+
+        if (statusFilter === "All") return true;
+        return status === statusFilter;
+      });
+    }, [filteredData, statusFilter]);
+
+
 
 const sortedData = [...filteredByStatus].sort((a, b) => {
   if (!sortField) return 0;

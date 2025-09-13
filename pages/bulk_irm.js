@@ -11,10 +11,10 @@ export default function BulkIRMUpload() {
   const [fileName, setFileName] = useState('');
 
   const headers = [
-    'SrNo', 'adCode', 'bankName', 'ieCode', 'RemittanceRefNumber',
+    'SrNo', 'adCode', 'bankName', 'ieCode', 'RemittanceRefNo',
     'remittanceDate', 'purposeCode', 'remittanceCurrency', 'remittanceAmount',
     'utilizedAmount', 'outstandingAmount', 'remitterName', 'remitterAddress',
-    'remitterCountryCode', 'remitterBank', 'otherBankRefNumber', 'Status', 'remittanceType'
+    'remitterCountryCode', 'remitterBank', 'otherBankRef', 'status', 'remittanceType'
   ];
 
   const sampleRow = {
@@ -22,7 +22,7 @@ export default function BulkIRMUpload() {
     adCode: '6390005',
     bankName: 'Kotak Bank',
     ieCode: '654987321',
-    RemittanceRefNumber: '0002GRS65498732',
+    RemittanceRefNo: '0002GRS65498732',
     remittanceDate: '10-05-2024',
     purposeCode: 'P1305',
     remittanceCurrency: 'JPY',
@@ -33,7 +33,7 @@ export default function BulkIRMUpload() {
     remitterAddress: 'Osaka Street',
     remitterCountryCode: 'JP',
     remitterBank: 'MUFG',
-    otherBankRefNumber: 'Test654987',
+    otherBankRefNo: 'Test654987',
     Status: 'partially',
     remittanceType: 'IRM'
   };
@@ -75,7 +75,7 @@ export default function BulkIRMUpload() {
           const errors = [];
 
           for (const field of requiredFields) {
-            if (!row[field] || row[field].trim() === "") {
+            if (!row[field] || String(row[field]).trim() === ""){
               errors.push(`Missing ${field}`);
             }
           }
@@ -196,6 +196,49 @@ export default function BulkIRMUpload() {
               </div>
             )}
           </div>
+
+          {/* Invalid Rows */}
+{invalidRows.length > 0 && (
+  <div className="overflow-x-auto mb-6">
+    <h2 className="text-lg font-semibold text-red-600 mb-2">Invalid Rows</h2>
+    <table className="w-full text-sm border-collapse">
+      <thead>
+        <tr className="bg-red-200 font-semibold">
+          {headers.map((h, i) => <th key={i} className="px-4 py-2 text-left">{h}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {invalidRows.map(({ row, issues }, idx) => (
+          <tr key={idx} className="bg-red-100 border-b hover:bg-red-200">
+            {headers.map((h, i) => <td key={i} className="px-4 py-2">{row[h] || '-'}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{/* Valid Rows */}
+{validRows.length > 0 && (
+  <div className="overflow-x-auto mb-6">
+    <h2 className="text-lg font-semibold text-green-600 mb-2">Valid Rows</h2>
+    <table className="w-full text-sm border-collapse">
+      <thead>
+        <tr className="bg-green-200 font-semibold">
+          {headers.map((h, i) => <th key={i} className="px-4 py-2 text-left">{h}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {validRows.map((row, idx) => (
+          <tr key={idx} className="bg-green-50 border-b hover:bg-green-100">
+            {headers.map((h, i) => <td key={i} className="px-4 py-2">{row[h] || '-'}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
 
           <button
             onClick={handleUpload}

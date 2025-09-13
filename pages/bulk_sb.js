@@ -13,13 +13,35 @@ export default function BulkSBUpload() {
   const router = useRouter();
 
   const headers = [
-    'shippingBillNo', 'formNo', 'shippingBillDate', 'portCode', 'exportAgency',
-    'adCode', 'bankName', 'ieCode', 'invoiceNo', 'invoiceDate', 'fobCurrency',
-    'exportBillValue', 'billOutstandingValue', 'sbUtilization', 'buyerName',
-    'buyerAddress', 'buyerCountryCode', 'consigneeName', 'consigneeCountryCode',
-    'portOfDestination', 'finalDestination', 'commodity', 'shippingCompany',
-    'blNumber', 'vesselName', 'blDate', 'commercialInvoice'
+    'shippingBillNo',
+    'formNo',
+    'shippingBillDate',
+    'portCode',
+    'exportAgency',
+    'adCode',
+    'bankName',
+    'ieCode',
+    'invoiceNo',
+    'invoiceDate',
+    'fobCurrency',
+    'exportBillValue',
+    'billOutstandingValue',
+    'sbUtilization',
+    'buyerName',
+    'buyerAddress',
+    'buyerCountryCode',
+    'consigneeName',
+    'consigneeCountryCode',
+    'portOfDestination',
+    'finalDestination',
+    'commodity',
+    'shippingCompany',
+    'blNumber',
+    'vesselName',
+    'blDate',
+    'commercialInvoice'
   ];
+
 
   const sampleRow = {
     shippingBillNo: '1234568',
@@ -86,15 +108,22 @@ export default function BulkSBUpload() {
             }
           }
 
-          for (const field of ['shippingBillDate', 'invoiceDate', 'blDate']) {
-            if (row[field] && !/^\d{2}-\d{2}-\d{4}$/.test(row[field])) {
-              errors.push(`${field} has invalid format`);
+          for (const dateField of ['shippingBillDate', 'invoiceDate', 'blDate']) {
+              if (row[dateField]) {
+                const [dd, mm, yyyy] = row[dateField].split('-').map(Number);
+                const isValidDate = dd > 0 && dd <= 31 && mm > 0 && mm <= 12 && yyyy > 1900;
+                if (!/^\d{2}-\d{2}-\d{4}$/.test(row[dateField]) || !isValidDate) {
+                  errors.push(`${dateField} should be in dd-mm-yyyy format`);
+                }
+              } else {
+                errors.push(`${dateField} is missing`);
+              }
             }
-          }
+
 
           for (const numField of ['exportBillValue', 'billOutstandingValue', 'sbUtilization']) {
-            if (row[numField] && !/^\d{1,18}(\.\d{1,2})?$/.test(row[numField])) {
-              errors.push(`${numField} is invalid`);
+            if (row[numField] === undefined || row[numField] === '' || isNaN(Number(row[numField]))) {
+              errors.push(`${numField} is not a valid number`);
             }
           }
 
@@ -185,35 +214,91 @@ export default function BulkSBUpload() {
       </div>
 
       {csvData.length > 0 && (
-        <div className="mt-6">
-          <div className="bg-[#f0f7f9] border border-[#c9e4ea] rounded-lg p-5 mb-4">
-            <h2 className="text-lg font-semibold text-[#08315c] mb-2">Validation Summary</h2>
-            <p className="text-green-700 font-medium">✔️ Valid rows: {validRows.length}</p>
-            <p className="text-red-700 font-medium">❌ Invalid rows: {invalidRows.length}</p>
+  <div className="mt-6">
+    {/* Validation Summary */}
+    <div className="bg-[#f0f7f9] border border-[#c9e4ea] rounded-lg p-5 mb-4">
+      <h2 className="text-lg font-semibold text-[#08315c] mb-2">Validation Summary</h2>
+      <p className="text-green-700 font-medium">✔️ Valid rows: {validRows.length}</p>
+      <p className="text-red-700 font-medium">❌ Invalid rows: {invalidRows.length}</p>
 
-            {invalidRows.length > 0 && (
-              <div className="mt-4 bg-red-50 border border-red-300 rounded p-4">
-                <h3 className="font-semibold text-red-700 mb-2">Issues found:</h3>
-                <ul className="list-disc pl-5 text-sm text-red-800 space-y-1">
-                  {invalidRows.map((item, i) => (
-                    <li key={i}>Row {item.row}: {item.issues.join(', ')}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={handleUpload}
-            disabled={validRows.length === 0}
-            className={`mt-4 bg-[#08315c] text-white px-6 py-3 rounded-md font-semibold transition-all ${
-              validRows.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
-            }`}
-          >
-            Upload
-          </button>
+      {invalidRows.length > 0 && (
+        <div className="mt-4 bg-red-50 border border-red-300 rounded p-4">
+          <h3 className="font-semibold text-red-700 mb-2">Issues found:</h3>
+          <ul className="list-disc pl-5 text-sm text-red-800 space-y-1">
+            {invalidRows.map((item, i) => (
+              <li key={i}>Row {item.row}: {item.issues.join(', ')}</li>
+            ))}
+          </ul>
         </div>
       )}
+    </div>
+
+    {/* Invalid Rows Table */}
+<div className="overflow-x-auto mb-6">
+  <h2 className="text-lg font-semibold mb-2 text-red-600">Invalid Rows</h2>
+  <table className="w-full text-sm border-collapse">
+    <thead>
+      <tr className="bg-[#fca5a5] text-black font-semibold">
+        {headers.map((h, i) => (
+          <th key={i} className="px-4 py-3 text-left">{h}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody className="text-gray-800">
+      {csvData
+        .map((row, i) => ({ row, index: i + 2 }))
+        .filter(r => invalidRows.some(ir => ir.row === r.index))
+        .map(({ row, index }) => (
+          <tr key={index} className="border-b bg-red-100 hover:bg-red-200">
+            {headers.map((h, idx) => (
+              <td key={idx} className="px-4 py-2">{row[h] || '-'}</td>
+            ))}
+          </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+{/* Valid Rows Table */}
+<div className="overflow-x-auto">
+  <h2 className="text-lg font-semibold mb-2 text-green-600">Valid Rows</h2>
+  <table className="w-full text-sm border-collapse">
+    <thead>
+      <tr className="bg-[#7bbbc2] text-black font-semibold">
+        {headers.map((h, i) => (
+          <th key={i} className="px-4 py-3 text-left">{h}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody className="text-gray-800">
+      {csvData
+        .map((row, i) => ({ row, index: i + 2 }))
+        .filter(r => !invalidRows.some(ir => ir.row === r.index))
+        .map(({ row, index }) => (
+          <tr key={index} className="border-b bg-green-50 hover:bg-green-100">
+            {headers.map((h, idx) => (
+              <td key={idx} className="px-4 py-2">{row[h] || '-'}</td>
+            ))}
+          </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+
+    {/* Upload Button */}
+    <button
+      onClick={handleUpload}
+      disabled={validRows.length === 0}
+      className={`mt-4 bg-[#08315c] text-white px-6 py-3 rounded-md font-semibold transition-all ${
+        validRows.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#061f38]'
+      }`}
+    >
+      Upload
+    </button>
+  </div>
+)}
+
     </div>
   );
 }
